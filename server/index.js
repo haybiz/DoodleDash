@@ -67,14 +67,14 @@ io.on('connection', (socket) => {
     io.in(roomId).emit('chat_message', { system: true, message: `${username} joined the room.` });
   });
 
-  socket.on('start_game', (roomId) => {
+  socket.on('start_game', ({ roomId, totalRounds }) => {
     const room = rooms[roomId];
     if (!room || room.players.length < 2) return;
 
     // Reset scores for a new game
     room.players.forEach(p => p.score = 0);
     room.currentRound = 1;
-    room.totalRounds = 3;
+    room.totalRounds = totalRounds || 3;
     room.drawerQueue = [...room.players.map(p => p.id)]; // Everyone gets a turn this round
 
     startNextTurn(roomId);

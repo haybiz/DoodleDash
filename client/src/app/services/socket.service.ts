@@ -59,8 +59,8 @@ export class SocketService {
     });
   }
 
-  startGame(roomId: string) {
-    this.socket.emit('start_game', roomId);
+  startGame(roomId: string, totalRounds: number) {
+    this.socket.emit('start_game', { roomId, totalRounds });
   }
 
   // ==== Drawing Events ====

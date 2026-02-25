@@ -161,11 +161,17 @@ import { Subscription } from 'rxjs';
               </div>
             </div>
             
-            <button *ngIf="roomState.status === 'waiting' && myId === roomState.players[0]?.id" 
-                    (click)="startGame()"
-                    class="w-full mt-4 bg-green-400 hover:bg-green-300 text-black font-black py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all text-lg">
-              Start Game 🚀
-            </button>
+            <div *ngIf="roomState.status === 'waiting' && myId === roomState.players[0]?.id" class="flex flex-col gap-2 mt-4">
+              <label class="text-xs font-black text-slate-500 uppercase tracking-wider text-center">Total Rounds</label>
+              <div class="flex items-center justify-center gap-4">
+                <button (click)="selectedRounds = selectedRounds > 1 ? selectedRounds - 1 : 1" class="w-10 h-10 rounded-full bg-slate-200 border-4 border-black font-black text-black text-xl flex items-center justify-center hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all">-</button>
+                <span class="font-black text-3xl text-black w-8 text-center">{{ selectedRounds }}</span>
+                <button (click)="selectedRounds = selectedRounds < 10 ? selectedRounds + 1 : 10" class="w-10 h-10 rounded-full bg-slate-200 border-4 border-black font-black text-black text-xl flex items-center justify-center hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all">+</button>
+              </div>
+              <button (click)="startGame()" class="w-full mt-2 bg-green-400 hover:bg-green-300 text-black font-black py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all text-lg">
+                Start Game 🚀
+              </button>
+            </div>
             <div *ngIf="roomState.status === 'waiting' && myId !== roomState.players[0]?.id" class="text-center font-bold text-slate-500 mt-4">
               Waiting for host to start...
             </div>
@@ -284,6 +290,7 @@ export class AppComponent implements OnInit, OnDestroy {
   public selectedAvatar = this.avatars[0];
   public roomIdInput = '';
   public errorMessage = '';
+  public selectedRounds = 3;
 
   public myId = '';
   public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0 };
@@ -388,7 +395,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   startGame() {
     if (this.roomState.id) {
-      this.socketService.startGame(this.roomState.id);
+      this.socketService.startGame(this.roomState.id, this.selectedRounds);
     }
   }
 

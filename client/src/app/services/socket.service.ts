@@ -30,7 +30,12 @@ export interface ChatMessage {
 })
 export class SocketService {
   private socket: Socket;
-  private readonly SERVER_URL = 'http://localhost:3000'; // Or your Render URL
+
+  // Render environment detection
+  private get isProduction() { return window.location.hostname !== 'localhost'; }
+  private readonly SERVER_URL = this.isProduction
+    ? 'https://doodledash-server.onrender.com' // Replace this with your actual Render URL later
+    : 'http://localhost:3000';
 
   public socketId$ = new BehaviorSubject<string>('');
 

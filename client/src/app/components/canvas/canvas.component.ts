@@ -62,6 +62,25 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }),
       this.socketService.onUndoAction().subscribe(() => {
         this.drawingService.undo();
+      }),
+      this.socketService.onRequestDoodleSave().subscribe(data => {
+        if (this.isDrawer) {
+          // Create an offscreen canvas to merge the layers and provide a white background
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = this.canvasRef.nativeElement.width;
+          tempCanvas.height = this.canvasRef.nativeElement.height;
+          const tCtx = tempCanvas.getContext('2d');
+
+          if (tCtx) {
+            tCtx.fillStyle = '#ffffff';
+            tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tCtx.drawImage(this.bgCanvasRef.nativeElement, 0, 0);
+            tCtx.drawImage(this.canvasRef.nativeElement, 0, 0);
+
+            const dataUrl = tempCanvas.toDataURL('image/png');
+            this.socketService.sendDoodleSave(this.roomId, dataUrl, data.word);
+          }
+        }
       })
     );
   }

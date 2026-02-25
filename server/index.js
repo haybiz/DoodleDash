@@ -46,7 +46,8 @@ io.on('connection', (socket) => {
         currentRoundId: 0, // Track specific round instances for timeouts
         currentRound: 0,
         totalRounds: 3,
-        drawerQueue: []
+        drawerQueue: [],
+        doodles: []
       };
     }
 
@@ -80,6 +81,7 @@ io.on('connection', (socket) => {
     room.currentRound = 1;
     room.totalRounds = totalRounds || 3;
     room.drawerQueue = [...room.players.map(p => p.id)]; // Everyone gets a turn this round
+    room.doodles = [];
 
     startNextTurn(roomId);
   });
@@ -154,6 +156,14 @@ io.on('connection', (socket) => {
 
     // Normal chat broadcast
     io.in(data.roomId).emit('chat_message', { username: player.username, message: data.message });
+  });
+
+  // Save doodle event
+  socket.on('save_doodle', ({ roomId, image, word }) => {
+    const room = rooms[roomId];
+    if (room && room.currentDrawer === socket.id) {
+      room.doodles.push({ image, word, drawer: room.players.find(p => p.id === socket.id)?.username || 'Unknown' });
+    }
   });
 
   socket.on('disconnect', () => {
@@ -253,7 +263,12 @@ function endTurn(roomId) {
   io.in(roomId).emit('chat_message', { system: true, message: `Time's up! The word was: ${room.currentWord}` });
   io.in(roomId).emit('room_state_update', room);
 
-  // Wait a few seconds, then start next turn backwards
+  // Request the drawer to send the final canvas state
+  if (room.currentDrawer) {
+    io.to(room.currentDrawer).emit('request_doodle_save', { word: room.currentWord });
+  }
+
+  // Wait a few seconds, then start next turn
   setTimeout(() => {
     if (rooms[roomId] && rooms[roomId].players.length > 1) {
       startNextTurn(roomId);

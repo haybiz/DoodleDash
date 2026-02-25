@@ -22,6 +22,7 @@ export interface RoomState {
   roundTime: number;
   currentRound: number;
   totalRounds: number;
+  doodles: { image: string, word: string, drawer: string }[];
 }
 
 export interface ChatMessage {
@@ -129,5 +130,16 @@ export class SocketService {
     return new Observable(observer => {
       this.socket.on('chat_message', (data: ChatMessage) => observer.next(data));
     });
+  }
+
+  // ==== Game Over & Slideshow ====
+  onRequestDoodleSave(): Observable<{ word: string }> {
+    return new Observable(observer => {
+      this.socket.on('request_doodle_save', (data) => observer.next(data));
+    });
+  }
+
+  sendDoodleSave(roomId: string, image: string, word: string) {
+    this.socket.emit('save_doodle', { roomId, image, word });
   }
 }

@@ -237,11 +237,24 @@ import { Subscription } from 'rxjs';
             </ng-container>
 
             <!-- Game Over Screen -->
-            <div *ngIf="roomState.status === 'game_over'" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center z-50">
-              <h2 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-yellow-600 mb-8 tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">GAME OVER!</h2>
+            <div *ngIf="roomState.status === 'game_over'" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-4 md:p-6 text-center z-[100] overflow-y-auto">
+              <h2 class="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-yellow-600 mb-6 tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">GAME OVER!</h2>
               
+              <!-- Doodle Slideshow -->
+              <div *ngIf="roomState.doodles && roomState.doodles.length > 0" class="w-full max-w-lg bg-white p-2 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6 rotate-1 shrink-0">
+                <div class="bg-slate-100 rounded-xl overflow-hidden aspect-video relative flex items-center justify-center">
+                   <img [src]="roomState.doodles[slideIndex].image" class="w-full h-full object-contain mix-blend-multiply" />
+                   <div class="absolute bottom-2 right-2 bg-black text-white px-3 py-1 text-xs md:text-sm font-black rounded-full shadow-md border-2 border-slate-700">
+                     Word: {{ roomState.doodles[slideIndex].word }}
+                   </div>
+                   <div class="absolute top-2 left-2 bg-yellow-400 text-black px-2 py-1 md:px-3 md:text-sm text-xs font-black rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transform -rotate-3">
+                     {{ roomState.doodles[slideIndex].drawer }}
+                   </div>
+                </div>
+              </div>
+
               <!-- Podium -->
-              <div class="flex items-end justify-center gap-4 h-48 mb-8">
+              <div class="flex items-end justify-center gap-2 md:gap-4 h-32 md:h-48 mb-6 shrink-0">
                 <!-- 2nd Place -->
                 <div *ngIf="sortedPlayers()[1]" class="flex flex-col items-center w-24">
                   <span class="text-4xl mb-2">{{ sortedPlayers()[1].avatar }}</span>
@@ -263,16 +276,21 @@ import { Subscription } from 'rxjs';
               </div>
 
               <!-- Metagame Awards -->
-              <div class="grid grid-cols-2 gap-4 w-full max-w-md">
-                <div class="bg-white/10 p-4 rounded-2xl border-2 border-white/20 backdrop-blur-sm shadow-xl">
-                  <h4 class="text-pink-400 font-black text-sm uppercase tracking-widest mb-1">⚡ Speed Demon</h4>
-                  <div class="text-3xl my-2">{{ getAwardWinner('speed')?.avatar || '👻' }}</div>
-                  <p class="font-bold text-slate-200 truncate">{{ getAwardWinner('speed')?.username || 'Nobody' }}</p>
+              <div class="grid grid-cols-3 gap-2 md:gap-4 w-full max-w-2xl shrink-0 pb-4">
+                <div class="bg-white/10 p-3 rounded-2xl border-2 border-white/20 backdrop-blur-sm shadow-xl flex flex-col justify-between" title="Fastest total guess time!">
+                  <h4 class="text-pink-400 font-black text-[0.6rem] md:text-xs uppercase tracking-widest mb-1">⚡ Speed Demon</h4>
+                  <div class="text-2xl md:text-3xl my-1">{{ getAwardWinner('speed')?.avatar || '👻' }}</div>
+                  <p class="font-bold text-slate-200 text-xs md:text-base truncate">{{ getAwardWinner('speed')?.username || 'Nobody' }}</p>
                 </div>
-                <div class="bg-white/10 p-4 rounded-2xl border-2 border-white/20 backdrop-blur-sm shadow-xl">
-                  <h4 class="text-cyan-400 font-black text-sm uppercase tracking-widest mb-1">🎨 The Picasso</h4>
-                  <div class="text-3xl my-2">{{ getAwardWinner('draw')?.avatar || '👻' }}</div>
-                  <p class="font-bold text-slate-200 truncate">{{ getAwardWinner('draw')?.username || 'Nobody' }}</p>
+                <div class="bg-white/10 p-3 rounded-2xl border-2 border-white/20 backdrop-blur-sm shadow-xl flex flex-col justify-between" title="Earned the most points from drawing!">
+                  <h4 class="text-cyan-400 font-black text-[0.6rem] md:text-xs uppercase tracking-widest mb-1">🎨 The Picasso</h4>
+                  <div class="text-2xl md:text-3xl my-1">{{ getAwardWinner('draw')?.avatar || '👻' }}</div>
+                  <p class="font-bold text-slate-200 text-xs md:text-base truncate">{{ getAwardWinner('draw')?.username || 'Nobody' }}</p>
+                </div>
+                <div class="bg-white/10 p-3 rounded-2xl border-2 border-white/20 backdrop-blur-sm shadow-xl flex flex-col justify-between" title="Took the longest time to guess the word, but still got it!">
+                  <h4 class="text-orange-400 font-black text-[0.6rem] md:text-xs uppercase tracking-widest mb-1">🐢 Slowpoke</h4>
+                  <div class="text-2xl md:text-3xl my-1">{{ getAwardWinner('slow')?.avatar || '👻' }}</div>
+                  <p class="font-bold text-slate-200 text-xs md:text-base truncate">{{ getAwardWinner('slow')?.username || 'Nobody' }}</p>
                 </div>
               </div>
             </div>
@@ -336,12 +354,16 @@ export class AppComponent implements OnInit, OnDestroy {
   public selectedRounds = 3;
 
   public myId = '';
-  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0 };
+  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0, doodles: [] };
 
   public drawerWord = '';
   public chatHistory: ChatMessage[] = [];
   public currentMessage = '';
   public timeLeft = 0;
+
+  // Slideshow
+  public slideIndex = 0;
+  private slideInterval: any;
 
   // Reactions
   public reactionEmojis = ['❤️', '😂', '🔥', '😮', '💀', '🎉'];
@@ -363,8 +385,22 @@ export class AppComponent implements OnInit, OnDestroy {
       }),
 
       this.socketService.onRoomStateUpdate().subscribe(state => {
+        const wasPlaying = this.roomState.status !== 'game_over';
         this.errorMessage = ''; // Clear any previous errors on success
         this.roomState = state;
+
+        // Start slideshow
+        if (state.status === 'game_over' && wasPlaying) {
+          this.slideIndex = 0;
+          this.slideInterval = setInterval(() => {
+            if (this.roomState.doodles && this.roomState.doodles.length > 0) {
+              this.slideIndex = (this.slideIndex + 1) % this.roomState.doodles.length;
+            }
+          }, 3000);
+        } else if (state.status !== 'game_over') {
+          clearInterval(this.slideInterval);
+        }
+
         if (state.status === 'playing') {
           // Sync word lengths
           if (!this.isDrawer() && !this.hasIGuessed() && state.currentWord) {
@@ -400,6 +436,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.subs.forEach(s => s.unsubscribe());
     clearInterval(this.timerInterval);
+    clearInterval(this.slideInterval);
   }
 
   joinRoom() {
@@ -500,16 +537,20 @@ export class AppComponent implements OnInit, OnDestroy {
     return player ? player.avatar : '👤';
   }
 
-  getAwardWinner(type: 'speed' | 'draw'): Player | undefined {
+  getAwardWinner(type: 'speed' | 'draw' | 'slow'): Player | undefined {
     let validPlayers = this.roomState.players;
     if (type === 'speed') {
       const positiveTimePlayers = validPlayers.filter(p => (p.guessSpeed || 0) > 0);
       if (positiveTimePlayers.length === 0) return undefined;
       return positiveTimePlayers.sort((a, b) => (b.guessSpeed || 0) - (a.guessSpeed || 0))[0];
-    } else {
+    } else if (type === 'draw') {
       const positivePoints = validPlayers.filter(p => (p.drawingScore || 0) > 0);
       if (positivePoints.length === 0) return undefined;
       return positivePoints.sort((a, b) => (b.drawingScore || 0) - (a.drawingScore || 0))[0];
+    } else {
+      const negativePoints = validPlayers.filter(p => (p.guessSpeed || 0) > 0);
+      if (negativePoints.length === 0) return undefined;
+      return negativePoints.sort((a, b) => (a.guessSpeed || 0) - (b.guessSpeed || 0))[0];
     }
   }
 

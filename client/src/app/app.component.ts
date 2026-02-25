@@ -175,13 +175,18 @@ import { Subscription } from 'rxjs';
         <!-- Main Canvas Area -->
         <div class="flex-grow flex flex-col gap-4 relative z-10">
           <!-- Game Status Header -->
-          <div class="bg-white p-4 rounded-3xl flex justify-between items-center border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div class="bg-white p-4 flex-col md:flex-row gap-4 md:gap-0 rounded-3xl flex justify-between items-center border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             
-            <div *ngIf="roomState.status === 'playing'" class="bg-pink-400 text-black border-4 border-black px-4 py-2 rounded-2xl font-black flex items-center min-w-[80px] justify-center text-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transform -rotate-2">
-              <span class="mr-2">⏱️</span> {{ timeLeft }}s
-            </div>
-            <div *ngIf="roomState.status !== 'playing'" class="px-4 py-2 font-black text-slate-400">
-              ---
+            <div class="flex gap-2 w-full md:w-auto justify-center md:justify-start">
+              <div *ngIf="roomState.status === 'playing'" class="bg-pink-400 text-black border-4 border-black px-4 py-2 rounded-2xl font-black flex items-center min-w-[80px] justify-center text-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transform -rotate-2">
+                <span class="mr-2">⏱️</span> {{ timeLeft }}s
+              </div>
+              <div *ngIf="roomState.status !== 'waiting' && roomState.currentRound" class="bg-indigo-300 text-black border-4 border-black px-4 py-2 rounded-2xl font-black flex items-center justify-center text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transform rotate-1 whitespace-nowrap">
+                Round {{ roomState.currentRound }} / {{ roomState.totalRounds }}
+              </div>
+              <div *ngIf="roomState.status === 'waiting' || !roomState.currentRound" class="px-4 py-2 font-black text-slate-400">
+                ---
+              </div>
             </div>
 
             <!-- Current Word Display -->
@@ -281,7 +286,7 @@ export class AppComponent implements OnInit, OnDestroy {
   public errorMessage = '';
 
   public myId = '';
-  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000 };
+  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0 };
 
   public drawerWord = '';
   public chatHistory: ChatMessage[] = [];

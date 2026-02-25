@@ -18,6 +18,8 @@ export interface RoomState {
   currentDrawer: string; // socket.id of drawer
   roundEndTime: number;
   roundTime: number;
+  currentRound: number;
+  totalRounds: number;
 }
 
 export interface ChatMessage {

@@ -43,7 +43,10 @@ io.on('connection', (socket) => {
         currentDrawer: null,
         roundEndTime: 0,
         roundTime: 60 * 1000, // 60 seconds
-        currentRoundId: 0, // Track specific round instances
+        currentRoundId: 0, // Track specific round instances for timeouts
+        currentRound: 0,
+        totalRounds: 3,
+        drawerQueue: []
       };
     }
 
@@ -68,7 +71,13 @@ io.on('connection', (socket) => {
     const room = rooms[roomId];
     if (!room || room.players.length < 2) return;
 
-    startNextRound(roomId);
+    // Reset scores for a new game
+    room.players.forEach(p => p.score = 0);
+    room.currentRound = 1;
+    room.totalRounds = 3;
+    room.drawerQueue = [...room.players.map(p => p.id)]; // Everyone gets a turn this round
+
+    startNextTurn(roomId);
   });
 
   // Handle incoming drawing batches
@@ -129,7 +138,7 @@ io.on('connection', (socket) => {
         // Check if everyone guessed
         const allGuessed = room.players.every(p => p.hasGuessed || p.id === room.currentDrawer);
         if (allGuessed) {
-          endRound(data.roomId);
+          endTurn(data.roomId);
         }
         return;
       }
@@ -158,7 +167,7 @@ io.on('connection', (socket) => {
         } else {
           // If drawer left, end round
           if (room.currentDrawer === socket.id && room.status === 'playing') {
-            endRound(roomId);
+            endTurn(roomId);
           } else {
             io.in(roomId).emit('room_state_update', room);
           }
@@ -168,51 +177,71 @@ io.on('connection', (socket) => {
   });
 });
 
-function startNextRound(roomId) {
+function startNextTurn(roomId) {
   const room = rooms[roomId];
   if (!room) return;
+
+  // Check if we need to start a new round
+  if (room.drawerQueue.length === 0) {
+    room.currentRound++;
+    if (room.currentRound > room.totalRounds) {
+      // Game Over!
+      room.status = 'waiting';
+      room.currentWord = '';
+      room.currentDrawer = null;
+      io.in(roomId).emit('chat_message', { system: true, message: `Game Over! The final scores are in.` });
+      io.in(roomId).emit('room_state_update', room);
+      return;
+    }
+    // Refill the queue
+    room.drawerQueue = [...room.players.map(p => p.id)];
+  }
 
   room.status = 'playing';
   room.players.forEach(p => p.hasGuessed = false);
 
-  // Pick a random drawer logic (simple version: rotate)
-  // For now, let's just pick the first person who hasn't drawn recently, or random.
-  const eligibleDrawers = room.players;
-  room.currentDrawer = eligibleDrawers[Math.floor(Math.random() * eligibleDrawers.length)].id;
+  // Pop next drawer
+  room.currentDrawer = room.drawerQueue.shift();
+
+  // If the drawer left the game, skip to next turn
+  if (!room.players.find(p => p.id === room.currentDrawer)) {
+    startNextTurn(roomId);
+    return;
+  }
 
   room.currentWord = wordList[Math.floor(Math.random() * wordList.length)];
   room.roundEndTime = Date.now() + room.roundTime;
-  room.currentRoundId += 1; // Increment round ID
+  room.currentRoundId += 1; // Increment timeout ID
   const thisRoundId = room.currentRoundId;
 
   io.in(roomId).emit('room_state_update', room);
   io.in(roomId).emit('clear_canvas');
-  io.in(roomId).emit('chat_message', { system: true, message: `A new round has started!` });
+  io.in(roomId).emit('chat_message', { system: true, message: `Round ${room.currentRound} of ${room.totalRounds}! It brings up ${room.players.find(p => p.id === room.currentDrawer)?.username || 'someone'} to draw.` });
 
   // Inform the drawer of the word
   io.to(room.currentDrawer).emit('you_are_drawer', { word: room.currentWord });
 
   // Auto-end round timeout
   setTimeout(() => {
-    // Only end the round if this specific round is still active
+    // Only end the turn if this specific turn is still active
     if (rooms[roomId] && rooms[roomId].status === 'playing' && rooms[roomId].currentRoundId === thisRoundId) {
-      endRound(roomId);
+      endTurn(roomId);
     }
   }, room.roundTime);
 }
 
-function endRound(roomId) {
+function endTurn(roomId) {
   const room = rooms[roomId];
   if (!room) return;
 
   room.status = 'round_end';
-  io.in(roomId).emit('chat_message', { system: true, message: `Round over! The word was: ${room.currentWord}` });
+  io.in(roomId).emit('chat_message', { system: true, message: `Time's up! The word was: ${room.currentWord}` });
   io.in(roomId).emit('room_state_update', room);
 
-  // Wait a few seconds, then start next round
+  // Wait a few seconds, then start next turn backwards
   setTimeout(() => {
     if (rooms[roomId] && rooms[roomId].players.length > 1) {
-      startNextRound(roomId);
+      startNextTurn(roomId);
     } else if (rooms[roomId]) {
       rooms[roomId].status = 'waiting';
       io.in(roomId).emit('room_state_update', rooms[roomId]);

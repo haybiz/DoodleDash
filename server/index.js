@@ -37,6 +37,7 @@ io.on('connection', (socket) => {
         currentDrawer: null,
         roundEndTime: 0,
         roundTime: 60 * 1000, // 60 seconds
+        currentRoundId: 0, // Track specific round instances
       };
     }
 
@@ -166,6 +167,8 @@ function startNextRound(roomId) {
 
   room.currentWord = wordList[Math.floor(Math.random() * wordList.length)];
   room.roundEndTime = Date.now() + room.roundTime;
+  room.currentRoundId += 1; // Increment round ID
+  const thisRoundId = room.currentRoundId;
 
   io.in(roomId).emit('room_state_update', room);
   io.in(roomId).emit('clear_canvas');
@@ -176,7 +179,8 @@ function startNextRound(roomId) {
 
   // Auto-end round timeout
   setTimeout(() => {
-    if (rooms[roomId] && rooms[roomId].status === 'playing' && rooms[roomId].currentWord === room.currentWord) {
+    // Only end the round if this specific round is still active
+    if (rooms[roomId] && rooms[roomId].status === 'playing' && rooms[roomId].currentRoundId === thisRoundId) {
       endRound(roomId);
     }
   }, room.roundTime);

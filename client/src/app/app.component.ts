@@ -173,12 +173,26 @@ import { Subscription } from 'rxjs';
           </div>
 
           <!-- Canvas Component -->
-          <div class="flex-grow relative h-full min-h-[400px]">
+          <div class="flex-grow relative h-full min-h-[400px] overflow-hidden rounded-3xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <app-canvas class="absolute inset-0" [roomId]="roomState.id" [isDrawer]="isDrawer()" [isWaiting]="roomState.status === 'waiting'"></app-canvas>
             
-            <!-- Overlay for non-drawers while waiting -->
-            <div *ngIf="roomState.status !== 'playing' || (!isDrawer() && !hasIGuessed())" class="pointer-events-none absolute inset-0 rounded-xl flex items-end justify-center pb-8 z-20">
-              <!-- Subtitle or status overlay on canvas -->
+            <!-- Floating Reactions layer -->
+            <div class="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+               <div *ngFor="let r of activeReactions"
+                    class="absolute bottom-0 text-5xl reaction-float drop-shadow-md"
+                    [style.left.%]="r.left"
+                    [style.animationDuration.ms]="r.animationDuration">
+                 {{ r.emoji }}
+               </div>
+            </div>
+
+            <!-- Reaction Buttons (floating near canvas bottom) -->
+            <div *ngIf="roomState.id" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-40 bg-white p-2 border-4 border-black rounded-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all">
+              <button *ngFor="let emoji of reactionEmojis" 
+                      (click)="sendReaction(emoji)"
+                      class="text-3xl hover:scale-125 transition-transform px-3 py-1 drop-shadow-sm">
+                {{ emoji }}
+              </button>
             </div>
           </div>
         </div>
@@ -220,6 +234,14 @@ import { Subscription } from 'rxjs';
     .logo-glow {
       text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
     }
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(0.5) rotate(-10deg); opacity: 0; }
+      10% { opacity: 1; transform: translateY(-40px) scale(1.2) rotate(10deg); }
+      100% { transform: translateY(-400px) scale(1) rotate(-20deg); opacity: 0; }
+    }
+    .reaction-float {
+      animation: floatUp ease-out forwards;
+    }
   `]
 })
 export class AppComponent implements OnInit, OnDestroy {
@@ -235,6 +257,11 @@ export class AppComponent implements OnInit, OnDestroy {
   public chatHistory: ChatMessage[] = [];
   public currentMessage = '';
   public timeLeft = 0;
+
+  // Reactions
+  public reactionEmojis = ['❤️', '😂', '🔥', '😮', '💀', '🎉'];
+  public activeReactions: { id: number, emoji: string, left: number, animationDuration: number }[] = [];
+  private reactionIdCounter = 0;
 
   private subs: Subscription[] = [];
   private timerInterval: any;
@@ -268,6 +295,10 @@ export class AppComponent implements OnInit, OnDestroy {
       this.socketService.onChat().subscribe(msg => {
         this.chatHistory.push(msg);
         this.scrollToBottom();
+      }),
+
+      this.socketService.onReaction().subscribe(data => {
+        this.triggerReaction(data.emoji);
       })
     );
 
@@ -331,6 +362,28 @@ export class AppComponent implements OnInit, OnDestroy {
       this.socketService.sendChat(this.roomState.id, this.currentMessage);
       this.currentMessage = '';
     }
+  }
+
+  // ==== Reactions ====
+  sendReaction(emoji: string) {
+    if (this.roomState.id) {
+      this.triggerReaction(emoji); // Show instantly for myself
+      this.socketService.sendReaction(this.roomState.id, emoji);
+    }
+  }
+
+  triggerReaction(emoji: string) {
+    const id = this.reactionIdCounter++;
+    // Randomize starting position around the middle/bottom, and random speed
+    const left = 30 + Math.random() * 40; // 30% to 70%
+    const animationDuration = 1500 + Math.random() * 1000; // 1.5s to 2.5s
+
+    this.activeReactions.push({ id, emoji, left, animationDuration });
+
+    // Remove it after it floats away
+    setTimeout(() => {
+      this.activeReactions = this.activeReactions.filter(r => r.id !== id);
+    }, animationDuration);
   }
 
   // Helpers

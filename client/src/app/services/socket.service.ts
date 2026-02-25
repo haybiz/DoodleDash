@@ -91,6 +91,17 @@ export class SocketService {
     });
   }
 
+  // ==== Reactions ====
+  sendReaction(roomId: string, emoji: string) {
+    this.socket.emit('reaction', { roomId, emoji });
+  }
+
+  onReaction(): Observable<{ emoji: string, senderId: string }> {
+    return new Observable(observer => {
+      this.socket.on('reaction', (data) => observer.next(data));
+    });
+  }
+
   // ==== Game State Events ====
   onRoomStateUpdate(): Observable<RoomState> {
     return new Observable(observer => {

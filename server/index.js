@@ -92,6 +92,14 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle live reactions
+  socket.on('reaction', (data) => {
+    const room = rooms[data.roomId];
+    if (room) {
+      socket.to(data.roomId).emit('reaction', { emoji: data.emoji, senderId: socket.id });
+    }
+  });
+
   // Chat message & Guess logic
   socket.on('chat_message', (data) => {
     const room = rooms[data.roomId];

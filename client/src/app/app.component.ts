@@ -83,13 +83,18 @@ import { Subscription } from 'rxjs';
             </div>
             <div>
               <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Room Code</label>
-              <input [(ngModel)]="roomIdInput" type="text" class="w-full bg-yellow-100 border-4 border-black rounded-xl px-4 py-3 text-2xl font-black text-black text-center uppercase tracking-widest placeholder-yellow-600/50 focus:outline-none focus:bg-yellow-50 transition-colors" placeholder="e.g. ABCD12">
+              <input [(ngModel)]="roomIdInput" maxlength="6" type="text" class="w-full bg-yellow-100 border-4 border-black rounded-xl px-4 py-3 text-2xl font-black text-black text-center uppercase tracking-widest placeholder-yellow-600/50 focus:outline-none focus:bg-yellow-50 transition-colors" placeholder="e.g. ABCD12">
             </div>
+            
+            <div *ngIf="errorMessage" class="bg-red-100 border-2 border-red-500 text-red-700 px-4 py-3 rounded-xl font-bold text-center animate-pulse">
+              {{ errorMessage }}
+            </div>
+
             <div class="flex gap-4 mt-2">
               <button (click)="backToHome()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-black border-4 border-black font-black text-lg py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
                 Back
               </button>
-              <button (click)="joinRoom()" [disabled]="!username || !roomIdInput" class="w-2/3 bg-pink-400 hover:bg-pink-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black border-4 border-black font-black text-xl py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+              <button (click)="joinRoom()" [disabled]="!username || roomIdInput.length !== 6" class="w-2/3 bg-pink-400 hover:bg-pink-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black border-4 border-black font-black text-xl py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
                 Join Game ⚡
               </button>
             </div>
@@ -222,6 +227,7 @@ export class AppComponent implements OnInit, OnDestroy {
   public viewMode: 'home' | 'create' | 'join' = 'home';
   public username = '';
   public roomIdInput = '';
+  public errorMessage = '';
 
   public myId = '';
   public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000 };
@@ -240,7 +246,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.subs.push(
       this.socketService.socketId$.subscribe(id => this.myId = id),
 
+      this.socketService.onRoomError().subscribe(err => {
+        this.errorMessage = err.message;
+        this.roomState.id = ''; // Ensure we pop back to the landing page if it optimistic-rendered
+      }),
+
       this.socketService.onRoomStateUpdate().subscribe(state => {
+        this.errorMessage = ''; // Clear any previous errors on success
         this.roomState = state;
         if (state.status === 'playing') {
           // Sync word lengths
@@ -276,10 +288,11 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   joinRoom() {
-    if (this.username && this.roomIdInput) {
+    if (this.username && this.roomIdInput && (this.viewMode === 'create' || this.viewMode === 'join')) {
       const formattedRoomId = this.roomIdInput.trim().toUpperCase();
-      this.socketService.joinRoom(formattedRoomId, this.username);
-      this.roomState.id = formattedRoomId; // Optimistic UI setting
+      this.errorMessage = '';
+      this.socketService.joinRoom(formattedRoomId, this.username, this.viewMode);
+      // Removed optimistic UI setting of roomState.id so we wait for server confirmation
     }
   }
 
@@ -298,11 +311,13 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   showJoin() {
+    this.errorMessage = '';
     this.roomIdInput = '';
     this.viewMode = 'join';
   }
 
   backToHome() {
+    this.errorMessage = '';
     this.viewMode = 'home';
   }
 

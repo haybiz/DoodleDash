@@ -24,10 +24,16 @@ const rooms = {};
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  socket.on('join_room', ({ roomId, username }) => {
+  socket.on('join_room', ({ roomId, username, action }) => {
+    // If they are trying to join but it doesn't exist, reject them
+    if (action === 'join' && !rooms[roomId]) {
+      socket.emit('room_error', { message: `Room ${roomId} does not exist.` });
+      return;
+    }
+
     socket.join(roomId);
 
-    // Initialize room if it doesn't exist
+    // Initialize room if it doesn't exist (only allows 'create' action to do this)
     if (!rooms[roomId]) {
       rooms[roomId] = {
         id: roomId,

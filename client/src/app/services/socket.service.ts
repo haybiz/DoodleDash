@@ -46,8 +46,14 @@ export class SocketService {
     });
   }
 
-  joinRoom(roomId: string, username: string) {
-    this.socket.emit('join_room', { roomId, username });
+  joinRoom(roomId: string, username: string, action: 'create' | 'join') {
+    this.socket.emit('join_room', { roomId, username, action });
+  }
+
+  onRoomError(): Observable<{ message: string }> {
+    return new Observable(observer => {
+      this.socket.on('room_error', (data) => observer.next(data));
+    });
   }
 
   startGame(roomId: string) {

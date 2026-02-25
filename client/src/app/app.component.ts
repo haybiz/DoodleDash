@@ -106,69 +106,68 @@ import { Subscription } from 'rxjs';
       <!-- Main Game View -->
       <ng-container *ngIf="roomState.id">
         <!-- Side Game Panel -->
-        <div class="w-full md:w-64 flex flex-col gap-4">
+        <div class="w-full md:w-64 flex flex-col gap-4 relative z-10">
           <!-- Logo Header -->
-          <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center border border-slate-700">
-            <h1 class="font-heading text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-purple-500 mb-1 logo-glow">
-              DoodleDash
+          <div class="bg-yellow-300 p-6 rounded-3xl flex flex-col items-center justify-center border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 mb-1 drop-shadow-sm tracking-tighter" style="font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;">
+              DoodleDash!
             </h1>
-            <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">Room: {{ roomState.id }}</p>
+            <p class="text-black font-bold text-xs uppercase tracking-widest">Room: {{ roomState.id }}</p>
           </div>
 
           <!-- Players List -->
-          <div class="glass-panel p-4 rounded-2xl flex-grow h-48 md:h-auto overflow-y-auto border border-slate-700">
-            <h3 class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">Players</h3>
+          <div class="bg-white p-4 rounded-3xl flex-grow h-48 md:h-auto overflow-y-auto border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <h3 class="text-sm font-black text-black mb-4 uppercase tracking-wider">Players</h3>
             <div class="flex flex-col gap-2">
-              <div *ngFor="let p of sortedPlayers()" class="flex justify-between items-center p-3 rounded-lg border"
+              <div *ngFor="let p of sortedPlayers()" class="flex justify-between items-center p-3 rounded-2xl border-4 border-black text-black transition-all"
                    [ngClass]="{
-                     'bg-green-900/20 border-green-800': p.hasGuessed,
-                     'bg-indigo-900/20 border-indigo-800': p.id === roomState.currentDrawer,
-                     'bg-slate-800/30 border-slate-700': !p.hasGuessed && p.id !== roomState.currentDrawer,
-                     'border-l-4 border-l-indigo-500': p.id === myId
+                     'bg-green-300 translate-x-1': p.hasGuessed,
+                     'bg-cyan-300 -translate-y-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]': p.id === roomState.currentDrawer,
+                     'bg-slate-100': !p.hasGuessed && p.id !== roomState.currentDrawer
                    }">
                 <div class="flex items-center gap-2">
-                  <span class="font-medium" [class.text-indigo-300]="p.id === roomState.currentDrawer">{{ p.username }}</span>
-                  <span *ngIf="p.id === roomState.currentDrawer" class="text-xs bg-indigo-500/20 text-indigo-300 px-1 rounded">DRAWING</span>
+                  <span class="font-black">{{ p.username }}</span>
+                  <span *ngIf="p.id === roomState.currentDrawer" class="text-xs bg-white text-black px-2 py-0.5 rounded-full border-2 border-black font-bold">DRAW</span>
                 </div>
-                <span class="font-bold font-mono" [class.text-green-400]="p.hasGuessed" [class.text-slate-300]="!p.hasGuessed">{{ p.score }}</span>
+                <span class="font-black font-mono text-xl">{{ p.score }}</span>
               </div>
             </div>
             
             <button *ngIf="roomState.status === 'waiting' && myId === roomState.players[0]?.id" 
                     (click)="startGame()"
-                    class="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition-colors text-sm">
-              Start Game
+                    class="w-full mt-4 bg-green-400 hover:bg-green-300 text-black font-black py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all text-lg">
+              Start Game 🚀
             </button>
-            <div *ngIf="roomState.status === 'waiting' && myId !== roomState.players[0]?.id" class="text-center text-xs text-slate-500 mt-4">
+            <div *ngIf="roomState.status === 'waiting' && myId !== roomState.players[0]?.id" class="text-center font-bold text-slate-500 mt-4">
               Waiting for host to start...
             </div>
           </div>
         </div>
 
         <!-- Main Canvas Area -->
-        <div class="flex-grow flex flex-col gap-4">
+        <div class="flex-grow flex flex-col gap-4 relative z-10">
           <!-- Game Status Header -->
-          <div class="glass-panel p-4 rounded-2xl flex justify-between items-center border border-slate-700">
+          <div class="bg-white p-4 rounded-3xl flex justify-between items-center border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             
-            <div *ngIf="roomState.status === 'playing'" class="bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-4 py-2 rounded-lg font-bold flex items-center min-w-[80px] justify-center">
+            <div *ngIf="roomState.status === 'playing'" class="bg-pink-400 text-black border-4 border-black px-4 py-2 rounded-2xl font-black flex items-center min-w-[80px] justify-center text-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transform -rotate-2">
               <span class="mr-2">⏱️</span> {{ timeLeft }}s
             </div>
-            <div *ngIf="roomState.status !== 'playing'" class="px-4 py-2 font-bold text-slate-500">
+            <div *ngIf="roomState.status !== 'playing'" class="px-4 py-2 font-black text-slate-400">
               ---
             </div>
 
             <!-- Current Word Display -->
-            <div class="text-2xl font-bold tracking-[0.3em] font-mono mx-4 flex flex-wrap gap-2 text-center justify-center flex-grow">
+            <div class="text-3xl font-black tracking-[0.2em] font-mono mx-4 flex flex-wrap gap-2 text-center justify-center flex-grow text-black uppercase">
               <ng-container *ngIf="roomState.status === 'playing'">
-                <span *ngIf="isDrawer()" class="text-green-400">{{ drawerWord }}</span>
-                <span *ngIf="!isDrawer() && !hasIGuessed()" class="text-slate-200">{{ hiddenWord() }}</span>
-                <span *ngIf="!isDrawer() && hasIGuessed()" class="text-green-400">{{ drawerWord }}</span>
+                <span *ngIf="isDrawer()" class="text-green-500 drop-shadow-sm">{{ drawerWord }}</span>
+                <span *ngIf="!isDrawer() && !hasIGuessed()" class="text-slate-800 tracking-[0.4em]">{{ hiddenWord() }}</span>
+                <span *ngIf="!isDrawer() && hasIGuessed()" class="text-green-500 drop-shadow-sm">{{ drawerWord }}</span>
               </ng-container>
               <ng-container *ngIf="roomState.status === 'waiting'">
-                <span class="text-slate-500 text-lg tracking-normal uppercase">Waiting for players</span>
+                <span class="text-slate-400 text-xl tracking-normal">Waiting for players...</span>
               </ng-container>
               <ng-container *ngIf="roomState.status === 'round_end'">
-                <span class="text-yellow-400">Round Over!</span>
+                <span class="text-pink-500">Round Over!</span>
               </ng-container>
             </div>
           </div>
@@ -185,32 +184,32 @@ import { Subscription } from 'rxjs';
         </div>
 
         <!-- Right Chat Panel -->
-        <div class="w-full md:w-80 h-64 md:h-auto flex flex-col gap-0 glass-panel rounded-2xl overflow-hidden shadow-2xl border border-slate-700 z-10">
-          <div class="bg-slate-800/80 p-4 border-b border-slate-700 flex justify-between items-center">
-            <h3 class="font-bold text-slate-200">Live Chat</h3>
+        <div class="w-full md:w-80 h-64 md:h-auto flex flex-col gap-0 bg-white rounded-3xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-4 border-black z-10">
+          <div class="bg-cyan-400 p-4 border-b-4 border-black flex justify-between items-center text-black">
+            <h3 class="font-black text-xl uppercase tracking-wider">Live Chat 💬</h3>
           </div>
           
           <!-- Chat History -->
           <div class="flex-grow p-4 overflow-y-auto flex flex-col gap-2" #chatScroll (scroll)="onChatScroll()">
-            <div *ngFor="let msg of chatHistory" class="text-sm">
+            <div *ngFor="let msg of chatHistory" class="text-sm font-bold">
               <ng-container *ngIf="msg.system">
-                <span class="font-bold px-2 py-1 rounded w-full inline-block text-center"
-                      [ngClass]="{'bg-green-900/30 text-green-400 border border-green-800/50': msg.message.includes('guessed'), 'text-slate-400 italic': !msg.message.includes('guessed')}">
+                <span class="font-black px-3 py-1.5 rounded-xl w-full inline-block text-center border-2 border-black"
+                      [ngClass]="{'bg-green-300 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]': msg.message.includes('guessed'), 'bg-slate-100 text-slate-500 border-dashed': !msg.message.includes('guessed')}">
                   {{ msg.message }}
                 </span>
               </ng-container>
               <ng-container *ngIf="!msg.system">
-                <span class="font-bold text-slate-400 mr-2">{{ msg.username }}:</span>
-                <span class="text-slate-200 break-words">{{ msg.message }}</span>
+                <span class="font-black text-black mr-2">{{ msg.username }}:</span>
+                <span class="text-slate-800 break-words">{{ msg.message }}</span>
               </ng-container>
             </div>
           </div>
 
           <!-- Chat Input -->
-          <div class="p-4 bg-slate-800/50 border-t border-slate-700">
+          <div class="p-4 bg-slate-100 border-t-4 border-black">
             <input type="text" [(ngModel)]="currentMessage" (keyup.enter)="sendMessage()" 
                   [disabled]="!isChatEnabled()"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-slate-200 placeholder-slate-500 shadow-inner disabled:opacity-50" 
+                  class="w-full bg-white border-4 border-black rounded-xl px-4 py-3 font-bold focus:outline-none focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:-translate-y-0.5 transition-all text-black placeholder-slate-400 disabled:opacity-50 disabled:bg-slate-200" 
                   [placeholder]="isDrawer() ? 'You are drawing!' : (hasIGuessed() ? 'You already guessed!' : 'Type your guess here...')">
           </div>
         </div>

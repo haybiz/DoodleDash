@@ -1,82 +1,87 @@
 <div
-  class="canvas-container relative w-full h-full bg-slate-900 rounded-xl shadow-2xl overflow-hidden glass-panel border border-slate-700 flex flex-col">
+  class="canvas-container relative w-full h-full bg-white rounded-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-4 border-black flex flex-col">
 
   <!-- Tools Header -->
   <div
-    class="w-full p-4 flex gap-4 bg-slate-800/80 backdrop-blur z-10 border-b border-slate-700 justify-between items-center">
+    class="w-full p-4 flex gap-4 bg-yellow-100 z-10 border-b-4 border-black justify-between items-center rounded-t-2xl overflow-x-auto">
     <!-- Colors -->
     <div class="flex gap-2">
       @for (color of colors; track color) {
-      <button class="w-8 h-8 rounded-full border-2 transition-transform shadow-md" [style.backgroundColor]="color"
-        [class.border-white]="color === drawingService.currentColor"
+      <button
+        class="w-8 h-8 rounded-full border-4 transition-all shadow-sm hover:-translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+        [style.backgroundColor]="color" [class.border-black]="color === drawingService.currentColor"
+        [class.shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]]="color === drawingService.currentColor"
         [class.border-transparent]="color !== drawingService.currentColor"
         [class.scale-110]="color === drawingService.currentColor" (click)="setColor(color)"></button>
       }
     </div>
+
     <!-- Layer Selector -->
-    <div class="flex gap-1 bg-slate-900 overflow-hidden rounded-lg border border-slate-700 p-1">
-      <button class="px-3 py-1 text-xs font-semibold uppercase tracking-widest rounded transition-colors"
-        [class.bg-purple-600]="activeLayer === 'foreground'" [class.text-white]="activeLayer === 'foreground'"
-        [class.text-slate-400]="activeLayer !== 'foreground'" [class.hover:bg-slate-800]="activeLayer !== 'foreground'"
+    <div
+      class="flex gap-1 bg-white overflow-hidden rounded-xl border-4 border-black p-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+      <button class="px-3 py-1 text-xs font-black uppercase tracking-widest rounded transition-colors"
+        [class.bg-purple-400]="activeLayer === 'foreground'" [class.text-black]="activeLayer === 'foreground'"
+        [class.text-slate-500]="activeLayer !== 'foreground'" [class.hover:bg-slate-100]="activeLayer !== 'foreground'"
         (click)="setLayer('foreground')">FG</button>
-      <button class="px-3 py-1 text-xs font-semibold uppercase tracking-widest rounded transition-colors"
-        [class.bg-purple-600]="activeLayer === 'background'" [class.text-white]="activeLayer === 'background'"
-        [class.text-slate-400]="activeLayer !== 'background'" [class.hover:bg-slate-800]="activeLayer !== 'background'"
+      <button class="px-3 py-1 text-xs font-black uppercase tracking-widest rounded transition-colors"
+        [class.bg-purple-400]="activeLayer === 'background'" [class.text-black]="activeLayer === 'background'"
+        [class.text-slate-500]="activeLayer !== 'background'" [class.hover:bg-slate-100]="activeLayer !== 'background'"
         (click)="setLayer('background')">BG</button>
     </div>
 
     <!-- Tool Selector -->
-    <div class="flex gap-1 bg-slate-900 overflow-hidden rounded-lg border border-slate-700 p-1">
+    <div
+      class="flex gap-1 bg-white overflow-hidden rounded-xl border-4 border-black p-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
       <button class="px-3 py-1 text-sm font-medium rounded transition-colors"
-        [class.bg-indigo-600]="drawingService.currentTool === 'brush'"
-        [class.text-white]="drawingService.currentTool === 'brush'"
-        [class.text-slate-400]="drawingService.currentTool !== 'brush'"
-        [class.hover:bg-slate-800]="drawingService.currentTool !== 'brush'" (click)="setTool('brush')">🖌️</button>
+        [class.bg-cyan-400]="drawingService.currentTool === 'brush'"
+        [class.text-black]="drawingService.currentTool === 'brush'"
+        [class.text-slate-500]="drawingService.currentTool !== 'brush'"
+        [class.hover:bg-slate-100]="drawingService.currentTool !== 'brush'" (click)="setTool('brush')">🖌️</button>
       <button class="px-3 py-1 text-sm font-medium rounded transition-colors"
-        [class.bg-indigo-600]="drawingService.currentTool === 'line'"
-        [class.text-white]="drawingService.currentTool === 'line'"
-        [class.text-slate-400]="drawingService.currentTool !== 'line'"
-        [class.hover:bg-slate-800]="drawingService.currentTool !== 'line'" (click)="setTool('line')">➖</button>
+        [class.bg-cyan-400]="drawingService.currentTool === 'line'"
+        [class.text-black]="drawingService.currentTool === 'line'"
+        [class.text-slate-500]="drawingService.currentTool !== 'line'"
+        [class.hover:bg-slate-100]="drawingService.currentTool !== 'line'" (click)="setTool('line')">➖</button>
       <button class="px-3 py-1 text-sm font-medium rounded transition-colors"
-        [class.bg-indigo-600]="drawingService.currentTool === 'rectangle'"
-        [class.text-white]="drawingService.currentTool === 'rectangle'"
-        [class.text-slate-400]="drawingService.currentTool !== 'rectangle'"
-        [class.hover:bg-slate-800]="drawingService.currentTool !== 'rectangle'"
+        [class.bg-cyan-400]="drawingService.currentTool === 'rectangle'"
+        [class.text-black]="drawingService.currentTool === 'rectangle'"
+        [class.text-slate-500]="drawingService.currentTool !== 'rectangle'"
+        [class.hover:bg-slate-100]="drawingService.currentTool !== 'rectangle'"
         (click)="setTool('rectangle')">🔲</button>
       <button class="px-3 py-1 text-sm font-medium rounded transition-colors"
-        [class.bg-indigo-600]="drawingService.currentTool === 'circle'"
-        [class.text-white]="drawingService.currentTool === 'circle'"
-        [class.text-slate-400]="drawingService.currentTool !== 'circle'"
-        [class.hover:bg-slate-800]="drawingService.currentTool !== 'circle'" (click)="setTool('circle')">⭕</button>
-      <div class="w-px h-6 bg-slate-700 mx-1 self-center"></div>
+        [class.bg-cyan-400]="drawingService.currentTool === 'circle'"
+        [class.text-black]="drawingService.currentTool === 'circle'"
+        [class.text-slate-500]="drawingService.currentTool !== 'circle'"
+        [class.hover:bg-slate-100]="drawingService.currentTool !== 'circle'" (click)="setTool('circle')">⭕</button>
+      <div class="w-1 rounded-full h-6 bg-slate-200 mx-1 self-center"></div>
       <button class="px-3 py-1 text-sm font-medium rounded transition-colors"
-        [class.bg-indigo-600]="drawingService.currentTool === 'highlighter'"
-        [class.text-white]="drawingService.currentTool === 'highlighter'"
-        [class.text-slate-400]="drawingService.currentTool !== 'highlighter'"
-        [class.hover:bg-slate-800]="drawingService.currentTool !== 'highlighter'"
+        [class.bg-cyan-400]="drawingService.currentTool === 'highlighter'"
+        [class.text-black]="drawingService.currentTool === 'highlighter'"
+        [class.text-slate-500]="drawingService.currentTool !== 'highlighter'"
+        [class.hover:bg-slate-100]="drawingService.currentTool !== 'highlighter'"
         (click)="setTool('highlighter')">🖍️</button>
       <button class="px-3 py-1 text-sm font-medium rounded transition-colors"
-        [class.bg-indigo-600]="drawingService.currentTool === 'spray'"
-        [class.text-white]="drawingService.currentTool === 'spray'"
-        [class.text-slate-400]="drawingService.currentTool !== 'spray'"
-        [class.hover:bg-slate-800]="drawingService.currentTool !== 'spray'" (click)="setTool('spray')">💨</button>
+        [class.bg-cyan-400]="drawingService.currentTool === 'spray'"
+        [class.text-black]="drawingService.currentTool === 'spray'"
+        [class.text-slate-500]="drawingService.currentTool !== 'spray'"
+        [class.hover:bg-slate-100]="drawingService.currentTool !== 'spray'" (click)="setTool('spray')">💨</button>
     </div>
 
     <!-- Actions -->
     <div class="flex gap-2">
       <button
-        class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+        class="bg-slate-200 hover:bg-slate-300 text-black border-4 border-black px-4 py-2 rounded-xl text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all disabled:opacity-50"
         (click)="undo()">
         <span class="mr-1">↩️</span> Undo
       </button>
       <button
-        class="bg-red-900/30 hover:bg-red-900/60 text-red-100 border border-red-800/50 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+        class="bg-red-400 hover:bg-red-300 text-black border-4 border-black px-4 py-2 rounded-xl text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all"
         (click)="clearCanvas()">
         <span class="mr-1">🗑️</span> Clear
       </button>
     </div>
   </div>
-  <div class="flex-grow w-full relative">
+  <div class="flex-grow w-full relative bg-slate-50 rounded-b-2xl overflow-hidden">
     <!-- Background Layer (Z-index 0) -->
     <canvas #bgCanvas class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
 

@@ -22,30 +22,79 @@ import { Subscription } from 'rxjs';
         </p>
       </div>
 
-      <!-- Login / Join Room Modal -->
-      <div *ngIf="myId && !roomState.id" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur w-full h-full">
-        <div class="glass-panel p-8 rounded-2xl w-full max-w-md border border-slate-700 shadow-2xl flex flex-col gap-6">
-          <div class="text-center">
-             <h1 class="font-heading text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-purple-500 mb-2 logo-glow">
-              DoodleDash
-            </h1>
-            <p class="text-slate-400">Join a room to start drawing!</p>
-          </div>
+      <!-- Vivid Doodle Landing Page -->
+      <div *ngIf="myId && !roomState.id" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-yellow-400 overflow-hidden w-full h-full font-sans">
+        
+        <!-- Background Decorative Blobs -->
+        <div class="absolute inset-0 opacity-40 pointer-events-none">
+           <div class="absolute -top-20 -left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+           <div class="absolute top-40 -right-20 w-[30rem] h-[30rem] bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+           <div class="absolute -bottom-20 left-40 w-[24rem] h-[24rem] bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white p-8 md:p-12 rounded-3xl w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-4 border-black flex flex-col gap-8 relative z-10 transform transition-all -rotate-1 hover:rotate-0">
           
-          <div class="flex flex-col gap-4">
-            <div>
-              <label class="text-sm font-bold text-slate-400 mb-1 block">Username</label>
-              <input [(ngModel)]="username" type="text" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors" placeholder="CoolArtist99">
-            </div>
-            <div>
-              <label class="text-sm font-bold text-slate-400 mb-1 block">Room ID</label>
-              <input [(ngModel)]="roomIdInput" type="text" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors" placeholder="e.g. room123">
-            </div>
-            
-            <button (click)="joinRoom()" [disabled]="!username || !roomIdInput" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold py-3 rounded-lg transition-colors">
-              Play Now
+          <div class="text-center">
+             <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 mb-2 drop-shadow-sm tracking-tighter" style="font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;">
+              DoodleDash!
+            </h1>
+            <p class="text-slate-600 font-bold text-lg">The wildest drawing game on the web.</p>
+          </div>
+
+          <!-- Home View -->
+          <div *ngIf="viewMode === 'home'" class="flex flex-col gap-4">
+            <button (click)="showCreate()" class="w-full bg-cyan-400 hover:bg-cyan-300 text-black border-4 border-black font-black text-2xl py-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+              🎨 Create Room
+            </button>
+            <button (click)="showJoin()" class="w-full bg-pink-400 hover:bg-pink-300 text-black border-4 border-black font-black text-2xl py-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+              🤝 Join Room
             </button>
           </div>
+
+          <!-- Create View -->
+          <div *ngIf="viewMode === 'create'" class="flex flex-col gap-5">
+            <div>
+              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Your Nickname</label>
+              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold focus:outline-none focus:bg-white transition-colors" placeholder="CoolArtist99">
+            </div>
+            <div>
+              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Room Code</label>
+              <div class="bg-yellow-200 border-4 border-black rounded-xl px-4 py-3 text-3xl font-black text-center tracking-widest uppercase">
+                {{ roomIdInput }}
+              </div>
+              <p class="text-sm font-bold text-slate-500 mt-2 text-center">Share this code with your friends!</p>
+            </div>
+            <div class="flex gap-4 mt-2">
+              <button (click)="backToHome()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-black border-4 border-black font-black text-lg py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                Back
+              </button>
+              <button (click)="joinRoom()" [disabled]="!username" class="w-2/3 bg-green-400 hover:bg-green-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black border-4 border-black font-black text-xl py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+                 Let's Go! 🚀
+              </button>
+            </div>
+          </div>
+
+          <!-- Join View -->
+          <div *ngIf="viewMode === 'join'" class="flex flex-col gap-5">
+            <div>
+              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Your Nickname</label>
+              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold focus:outline-none focus:bg-white transition-colors" placeholder="CoolArtist99">
+            </div>
+            <div>
+              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Room Code</label>
+              <input [(ngModel)]="roomIdInput" type="text" class="w-full bg-yellow-100 border-4 border-black rounded-xl px-4 py-3 text-2xl font-black text-center uppercase tracking-widest focus:outline-none focus:bg-yellow-50 transition-colors" placeholder="e.g. ABCD12">
+            </div>
+            <div class="flex gap-4 mt-2">
+              <button (click)="backToHome()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-black border-4 border-black font-black text-lg py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                Back
+              </button>
+              <button (click)="joinRoom()" [disabled]="!username || !roomIdInput" class="w-2/3 bg-pink-400 hover:bg-pink-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black border-4 border-black font-black text-xl py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+                Join Game ⚡
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -170,8 +219,9 @@ import { Subscription } from 'rxjs';
   `]
 })
 export class AppComponent implements OnInit, OnDestroy {
+  public viewMode: 'home' | 'create' | 'join' = 'home';
   public username = '';
-  public roomIdInput = 'global';
+  public roomIdInput = '';
 
   public myId = '';
   public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000 };
@@ -227,9 +277,33 @@ export class AppComponent implements OnInit, OnDestroy {
 
   joinRoom() {
     if (this.username && this.roomIdInput) {
-      this.socketService.joinRoom(this.roomIdInput, this.username);
-      this.roomState.id = this.roomIdInput; // Optimistic UI setting
+      const formattedRoomId = this.roomIdInput.trim().toUpperCase();
+      this.socketService.joinRoom(formattedRoomId, this.username);
+      this.roomState.id = formattedRoomId; // Optimistic UI setting
     }
+  }
+
+  generateRoomCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    this.roomIdInput = result;
+  }
+
+  showCreate() {
+    this.generateRoomCode();
+    this.viewMode = 'create';
+  }
+
+  showJoin() {
+    this.roomIdInput = '';
+    this.viewMode = 'join';
+  }
+
+  backToHome() {
+    this.viewMode = 'home';
   }
 
   startGame() {

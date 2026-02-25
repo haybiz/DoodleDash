@@ -1,0 +1,40 @@
+<div class="canvas-container relative w-full h-full bg-slate-900 rounded-xl shadow-2xl overflow-hidden glass-panel border border-slate-700 flex flex-col">
+  
+  <!-- Tools Header -->
+  <div class="w-full p-4 flex gap-4 bg-slate-800/80 backdrop-blur z-10 border-b border-slate-700 justify-between items-center">
+    <!-- Colors -->
+    <div class="flex gap-2">
+      @for (color of colors; track color) {
+        <button class="w-8 h-8 rounded-full border-2 transition-transform shadow-md"
+                [style.backgroundColor]="color"
+                [class.border-white]="color === drawingService.currentColor"
+                [class.border-transparent]="color !== drawingService.currentColor"
+                [class.scale-110]="color === drawingService.currentColor"
+                (click)="setColor(color)"></button>
+      }
+    </div>
+    
+    <!-- Actions -->
+    <div class="flex gap-2">
+      <button class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50" (click)="undo()">
+        <span class="mr-1">↩️</span> Undo
+      </button>
+      <button class="bg-red-900/30 hover:bg-red-900/60 text-red-100 border border-red-800/50 px-4 py-2 rounded-lg text-sm font-semibold transition-colors" (click)="clearCanvas()">
+        <span class="mr-1">🗑️</span> Clear
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-grow w-full relative">
+    <canvas #drawCanvas
+            class="absolute top-0 left-0 w-full h-full touch-none cursor-crosshair"
+            (mousedown)="onMouseDown($event)"
+            (mousemove)="onMouseMove($event)"
+            (mouseup)="onMouseUp()"
+            (mouseleave)="onMouseUp()"
+            (touchstart)="onTouchStart($event)"
+            (touchmove)="onTouchMove($event)"
+            (touchend)="onMouseUp()">
+    </canvas>
+  </div>
+</div>

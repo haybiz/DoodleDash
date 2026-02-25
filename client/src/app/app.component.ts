@@ -56,7 +56,7 @@ import { Subscription } from 'rxjs';
           <div *ngIf="viewMode === 'create'" class="flex flex-col gap-5">
             <div>
               <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Your Nickname</label>
-              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold focus:outline-none focus:bg-white transition-colors" placeholder="CoolArtist99">
+              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white transition-colors" placeholder="CoolArtist99">
             </div>
             <div>
               <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Room Code</label>
@@ -79,11 +79,11 @@ import { Subscription } from 'rxjs';
           <div *ngIf="viewMode === 'join'" class="flex flex-col gap-5">
             <div>
               <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Your Nickname</label>
-              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold focus:outline-none focus:bg-white transition-colors" placeholder="CoolArtist99">
+              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white transition-colors" placeholder="CoolArtist99">
             </div>
             <div>
               <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Room Code</label>
-              <input [(ngModel)]="roomIdInput" type="text" class="w-full bg-yellow-100 border-4 border-black rounded-xl px-4 py-3 text-2xl font-black text-center uppercase tracking-widest focus:outline-none focus:bg-yellow-50 transition-colors" placeholder="e.g. ABCD12">
+              <input [(ngModel)]="roomIdInput" type="text" class="w-full bg-yellow-100 border-4 border-black rounded-xl px-4 py-3 text-2xl font-black text-black text-center uppercase tracking-widest placeholder-yellow-600/50 focus:outline-none focus:bg-yellow-50 transition-colors" placeholder="e.g. ABCD12">
             </div>
             <div class="flex gap-4 mt-2">
               <button (click)="backToHome()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-black border-4 border-black font-black text-lg py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">

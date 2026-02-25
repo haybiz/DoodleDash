@@ -72,7 +72,11 @@ io.on('connection', (socket) => {
     if (!room || room.players.length < 2) return;
 
     // Reset scores for a new game
-    room.players.forEach(p => p.score = 0);
+    room.players.forEach(p => {
+      p.score = 0;
+      p.drawingScore = 0;
+      p.guessSpeed = 0;
+    });
     room.currentRound = 1;
     room.totalRounds = totalRounds || 3;
     room.drawerQueue = [...room.players.map(p => p.id)]; // Everyone gets a turn this round
@@ -127,10 +131,14 @@ io.on('connection', (socket) => {
         const timeLeft = Math.max(0, room.roundEndTime - Date.now());
         const points = Math.floor((timeLeft / room.roundTime) * 100) + 10;
         player.score += points;
+        player.guessSpeed = (player.guessSpeed || 0) + timeLeft;
 
         // Drawer gets points too
         const drawer = room.players.find(p => p.id === room.currentDrawer);
-        if (drawer) drawer.score += 20;
+        if (drawer) {
+          drawer.score += 20;
+          drawer.drawingScore = (drawer.drawingScore || 0) + 20;
+        }
 
         io.in(data.roomId).emit('chat_message', { system: true, message: `${player.username} guessed the word!` });
         io.in(data.roomId).emit('room_state_update', room);
@@ -186,11 +194,18 @@ function startNextTurn(roomId) {
     room.currentRound++;
     if (room.currentRound > room.totalRounds) {
       // Game Over!
-      room.status = 'waiting';
-      room.currentWord = '';
-      room.currentDrawer = null;
+      room.status = 'game_over';
       io.in(roomId).emit('chat_message', { system: true, message: `Game Over! The final scores are in.` });
       io.in(roomId).emit('room_state_update', room);
+
+      setTimeout(() => {
+        if (rooms[roomId]) {
+          rooms[roomId].status = 'waiting';
+          rooms[roomId].currentWord = '';
+          rooms[roomId].currentDrawer = null;
+          io.in(roomId).emit('room_state_update', rooms[roomId]);
+        }
+      }, 15000); // 15 seconds to view summary
       return;
     }
     // Refill the queue

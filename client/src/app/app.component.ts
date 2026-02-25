@@ -211,27 +211,70 @@ import { Subscription } from 'rxjs';
             </div>
           </div>
 
-          <!-- Canvas Component -->
+          <!-- Canvas Component & Overlays -->
           <div class="flex-grow relative h-full min-h-[400px] overflow-hidden rounded-3xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <app-canvas class="absolute inset-0" [roomId]="roomState.id" [isDrawer]="isDrawer()" [isWaiting]="roomState.status === 'waiting'"></app-canvas>
-            
-            <!-- Floating Reactions layer -->
-            <div class="absolute inset-0 pointer-events-none z-50 overflow-hidden">
-               <div *ngFor="let r of activeReactions"
-                    class="absolute bottom-0 text-5xl reaction-float drop-shadow-md"
-                    [style.left.%]="r.left"
-                    [style.animationDuration.ms]="r.animationDuration">
-                 {{ r.emoji }}
-               </div>
-            </div>
+            <ng-container *ngIf="roomState.status !== 'game_over'">
+              <app-canvas class="absolute inset-0" [roomId]="roomState.id" [isDrawer]="isDrawer()" [isWaiting]="roomState.status === 'waiting'"></app-canvas>
+              
+              <!-- Floating Reactions layer -->
+              <div class="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+                 <div *ngFor="let r of activeReactions"
+                      class="absolute bottom-0 text-5xl reaction-float drop-shadow-md"
+                      [style.left.%]="r.left"
+                      [style.animationDuration.ms]="r.animationDuration">
+                   {{ r.emoji }}
+                 </div>
+              </div>
 
-            <!-- Reaction Buttons (floating near canvas bottom) -->
-            <div *ngIf="roomState.id" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-40 bg-white p-2 border-4 border-black rounded-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all">
-              <button *ngFor="let emoji of reactionEmojis" 
-                      (click)="sendReaction(emoji)"
-                      class="text-3xl hover:scale-125 transition-transform px-3 py-1 drop-shadow-sm">
-                {{ emoji }}
-              </button>
+              <!-- Reaction Buttons (floating near canvas bottom) -->
+              <div *ngIf="roomState.id" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-40 bg-white p-2 border-4 border-black rounded-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <button *ngFor="let emoji of reactionEmojis" 
+                        (click)="sendReaction(emoji)"
+                        class="text-3xl hover:scale-125 transition-transform px-3 py-1 drop-shadow-sm">
+                  {{ emoji }}
+                </button>
+              </div>
+            </ng-container>
+
+            <!-- Game Over Screen -->
+            <div *ngIf="roomState.status === 'game_over'" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center z-50">
+              <h2 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-yellow-600 mb-8 tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">GAME OVER!</h2>
+              
+              <!-- Podium -->
+              <div class="flex items-end justify-center gap-4 h-48 mb-8">
+                <!-- 2nd Place -->
+                <div *ngIf="sortedPlayers()[1]" class="flex flex-col items-center w-24">
+                  <span class="text-4xl mb-2">{{ sortedPlayers()[1].avatar }}</span>
+                  <div class="bg-slate-300 w-full h-24 rounded-t-xl border-4 border-black border-b-0 flex items-center justify-center text-2xl font-black text-black">2</div>
+                  <span class="font-bold text-white mt-1 truncate w-full">{{ sortedPlayers()[1].username }}</span>
+                </div>
+                <!-- 1st Place -->
+                <div *ngIf="sortedPlayers()[0]" class="flex flex-col items-center w-28 z-10">
+                  <span class="text-6xl mb-2">{{ sortedPlayers()[0].avatar }}</span>
+                  <div class="bg-yellow-400 w-full h-32 rounded-t-xl border-4 border-black border-b-0 flex items-center justify-center text-4xl font-black text-black">1</div>
+                  <span class="font-black text-white mt-1 truncate w-full">{{ sortedPlayers()[0].username }}</span>
+                </div>
+                <!-- 3rd Place -->
+                <div *ngIf="sortedPlayers()[2]" class="flex flex-col items-center w-24">
+                  <span class="text-4xl mb-2">{{ sortedPlayers()[2].avatar }}</span>
+                  <div class="bg-amber-600 w-full h-16 rounded-t-xl border-4 border-black border-b-0 flex items-center justify-center text-2xl font-black text-black">3</div>
+                  <span class="font-bold text-white mt-1 truncate w-full">{{ sortedPlayers()[2].username }}</span>
+                </div>
+              </div>
+
+              <!-- Metagame Awards -->
+              <div class="grid grid-cols-2 gap-4 w-full max-w-md">
+                <div class="bg-white/10 p-4 rounded-2xl border-2 border-white/20 backdrop-blur-sm shadow-xl">
+                  <h4 class="text-pink-400 font-black text-sm uppercase tracking-widest mb-1">⚡ Speed Demon</h4>
+                  <div class="text-3xl my-2">{{ getAwardWinner('speed')?.avatar || '👻' }}</div>
+                  <p class="font-bold text-slate-200 truncate">{{ getAwardWinner('speed')?.username || 'Nobody' }}</p>
+                </div>
+                <div class="bg-white/10 p-4 rounded-2xl border-2 border-white/20 backdrop-blur-sm shadow-xl">
+                  <h4 class="text-cyan-400 font-black text-sm uppercase tracking-widest mb-1">🎨 The Picasso</h4>
+                  <div class="text-3xl my-2">{{ getAwardWinner('draw')?.avatar || '👻' }}</div>
+                  <p class="font-bold text-slate-200 truncate">{{ getAwardWinner('draw')?.username || 'Nobody' }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -455,6 +498,19 @@ export class AppComponent implements OnInit, OnDestroy {
   getAvatarForUser(username: string): string {
     const player = this.roomState.players.find(p => p.username === username);
     return player ? player.avatar : '👤';
+  }
+
+  getAwardWinner(type: 'speed' | 'draw'): Player | undefined {
+    let validPlayers = this.roomState.players;
+    if (type === 'speed') {
+      const positiveTimePlayers = validPlayers.filter(p => (p.guessSpeed || 0) > 0);
+      if (positiveTimePlayers.length === 0) return undefined;
+      return positiveTimePlayers.sort((a, b) => (b.guessSpeed || 0) - (a.guessSpeed || 0))[0];
+    } else {
+      const positivePoints = validPlayers.filter(p => (p.drawingScore || 0) > 0);
+      if (positivePoints.length === 0) return undefined;
+      return positivePoints.sort((a, b) => (b.drawingScore || 0) - (a.drawingScore || 0))[0];
+    }
   }
 
   scrollToBottom() {

@@ -8,12 +8,14 @@ export interface Player {
   avatar: string;
   score: number;
   hasGuessed: boolean;
+  drawingScore?: number;
+  guessSpeed?: number;
 }
 
 export interface RoomState {
   id: string;
   players: Player[];
-  status: 'waiting' | 'playing' | 'round_end';
+  status: 'waiting' | 'playing' | 'round_end' | 'game_over';
   currentWord: string; // The word (might be empty/hidden for guessers on frontend depending on backend logic)
   currentDrawer: string; // socket.id of drawer
   roundEndTime: number;

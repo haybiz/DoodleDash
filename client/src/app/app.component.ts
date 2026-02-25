@@ -23,7 +23,7 @@ import { Subscription } from 'rxjs';
       </div>
 
       <!-- Vivid Doodle Landing Page -->
-      <div *ngIf="myId && !roomState.id" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-yellow-400 overflow-hidden w-full h-full font-sans">
+      <div *ngIf="myId && !roomState.id" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800 to-slate-930 overflow-hidden w-full h-full font-sans">
         
         <!-- Background Decorative Blobs -->
         <div class="absolute inset-0 opacity-40 pointer-events-none">

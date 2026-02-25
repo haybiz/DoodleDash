@@ -143,21 +143,21 @@ import { Subscription } from 'rxjs';
           </div>
 
           <!-- Players List -->
-          <div class="bg-white p-4 rounded-3xl flex-grow h-48 md:h-auto overflow-y-auto border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <h3 class="text-sm font-black text-black mb-4 uppercase tracking-wider">Players</h3>
-            <div class="flex flex-col gap-2">
-              <div *ngFor="let p of sortedPlayers()" class="flex justify-between items-center p-3 rounded-2xl border-4 border-black text-black transition-all"
+          <div class="bg-white p-4 rounded-3xl flex-grow h-48 md:h-auto flex flex-col overflow-hidden border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <h3 class="text-sm font-black text-black mb-4 uppercase tracking-wider flex-shrink-0">Players</h3>
+            <div class="flex flex-col gap-2 overflow-y-auto pr-1 pb-1 flex-grow">
+              <div *ngFor="let p of sortedPlayers()" class="flex justify-between items-center p-2 md:p-3 rounded-2xl border-4 border-black text-black transition-all flex-shrink-0"
                    [ngClass]="{
                      'bg-green-300 translate-x-1': p.hasGuessed,
                      'bg-cyan-300 -translate-y-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]': p.id === roomState.currentDrawer,
                      'bg-slate-100': !p.hasGuessed && p.id !== roomState.currentDrawer
                    }">
-                <div class="flex items-center gap-2">
-                  <span class="text-3xl">{{ p.avatar }}</span>
-                  <span class="font-black">{{ p.username }}</span>
-                  <span *ngIf="p.id === roomState.currentDrawer" class="text-xs bg-white text-black px-2 py-1 rounded-full border-2 border-black font-bold">DRAW</span>
+                <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                  <span class="text-2xl flex-shrink-0">{{ p.avatar }}</span>
+                  <span class="font-black text-sm md:text-base truncate block" [title]="p.username">{{ p.username }}</span>
+                  <span *ngIf="p.id === roomState.currentDrawer" class="text-[0.65rem] bg-white text-black px-1.5 py-0.5 rounded-full border-2 border-black font-bold flex-shrink-0 leading-none shadow-sm">DRAW</span>
                 </div>
-                <span class="font-black font-mono text-xl">{{ p.score }}</span>
+                <span class="font-black font-mono text-lg pl-2 flex-shrink-0" [title]="'Score: ' + p.score">{{ p.score }}</span>
               </div>
             </div>
             

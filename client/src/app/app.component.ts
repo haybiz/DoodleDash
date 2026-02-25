@@ -43,47 +43,74 @@ import { Subscription } from 'rxjs';
           </div>
 
           <!-- Home View -->
-          <div *ngIf="viewMode === 'home'" class="flex flex-col gap-4">
-            <button (click)="showCreate()" class="w-full bg-cyan-400 hover:bg-cyan-300 text-black border-4 border-black font-black text-2xl py-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
-              🎨 Create Room
-            </button>
-            <button (click)="showJoin()" class="w-full bg-pink-400 hover:bg-pink-300 text-black border-4 border-black font-black text-2xl py-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
-              🤝 Join Room
-            </button>
+          <div *ngIf="viewMode === 'home'" class="flex flex-col gap-6">
+            
+            <!-- Avatar Selection -->
+            <div>
+              <label class="text-sm font-black text-slate-500 mb-2 block uppercase tracking-wider text-center">Choose an Avatar</label>
+              <div class="flex flex-wrap justify-center gap-2">
+                <button *ngFor="let avatar of avatars" 
+                        (click)="selectedAvatar = avatar"
+                        class="text-3xl p-2 rounded-xl transition-all border-4"
+                        [ngClass]="selectedAvatar === avatar ? 'bg-indigo-100 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-110' : 'bg-transparent border-transparent opacity-50 hover:opacity-100 hover:scale-110'">
+                  {{ avatar }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Nickname Input -->
+            <div>
+              <label class="text-sm font-black text-slate-500 mb-2 block uppercase tracking-wider text-center">Your Nickname</label>
+              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:-translate-y-0.5 transition-all text-center" placeholder="CoolArtist99">
+            </div>
+
+            <div class="flex flex-col gap-4 mt-2">
+              <button (click)="showCreate()" [disabled]="!username" class="w-full bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black border-4 border-black font-black text-2xl py-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+                🎨 Create Room
+              </button>
+              <button (click)="showJoin()" [disabled]="!username" class="w-full bg-pink-400 hover:bg-pink-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black border-4 border-black font-black text-2xl py-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+                🤝 Join Room
+              </button>
+            </div>
           </div>
 
           <!-- Create View -->
-          <div *ngIf="viewMode === 'create'" class="flex flex-col gap-5">
-            <div>
-              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Your Nickname</label>
-              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white transition-colors" placeholder="CoolArtist99">
+          <div *ngIf="viewMode === 'create'" class="flex flex-col gap-6">
+            <!-- Player Info Preview -->
+            <div class="flex items-center justify-center gap-3 bg-slate-100 p-3 rounded-2xl border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <span class="text-4xl">{{ selectedAvatar }}</span>
+              <span class="text-xl font-black text-black">{{ username }}</span>
             </div>
+
             <div>
-              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Room Code</label>
-              <div class="bg-yellow-200 border-4 border-black rounded-xl px-4 py-3 text-3xl font-black text-center tracking-widest uppercase">
+              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider text-center">Room Code</label>
+              <div class="bg-yellow-200 border-4 border-black rounded-xl px-4 py-3 text-4xl font-black text-center tracking-widest uppercase">
                 {{ roomIdInput }}
               </div>
               <p class="text-sm font-bold text-slate-500 mt-2 text-center">Share this code with your friends!</p>
             </div>
+
             <div class="flex gap-4 mt-2">
-              <button (click)="backToHome()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-black border-4 border-black font-black text-lg py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+              <button (click)="backToHome()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-black border-4 border-black font-black text-lg py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
                 Back
               </button>
-              <button (click)="joinRoom()" [disabled]="!username" class="w-2/3 bg-green-400 hover:bg-green-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black border-4 border-black font-black text-xl py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+              <button (click)="joinRoom()" class="w-2/3 bg-green-400 hover:bg-green-300 text-black border-4 border-black font-black text-xl py-3 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
                  Let's Go! 🚀
               </button>
             </div>
           </div>
 
           <!-- Join View -->
-          <div *ngIf="viewMode === 'join'" class="flex flex-col gap-5">
-            <div>
-              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Your Nickname</label>
-              <input [(ngModel)]="username" type="text" class="w-full bg-slate-100 border-4 border-black rounded-xl px-4 py-3 text-xl font-bold text-black placeholder-slate-400 focus:outline-none focus:bg-white transition-colors" placeholder="CoolArtist99">
+          <div *ngIf="viewMode === 'join'" class="flex flex-col gap-6">
+            <!-- Player Info Preview -->
+            <div class="flex items-center justify-center gap-3 bg-slate-100 p-3 rounded-2xl border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <span class="text-4xl">{{ selectedAvatar }}</span>
+              <span class="text-xl font-black text-black">{{ username }}</span>
             </div>
+
             <div>
-              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider">Room Code</label>
-              <input [(ngModel)]="roomIdInput" maxlength="6" type="text" class="w-full bg-yellow-100 border-4 border-black rounded-xl px-4 py-3 text-2xl font-black text-black text-center uppercase tracking-widest placeholder-yellow-600/50 focus:outline-none focus:bg-yellow-50 transition-colors" placeholder="e.g. ABCD12">
+              <label class="text-lg font-black text-black mb-2 block uppercase tracking-wider text-center">Enter Room Code</label>
+              <input [(ngModel)]="roomIdInput" maxlength="6" type="text" class="w-full bg-yellow-100 border-4 border-black rounded-xl px-4 py-3 text-3xl font-black text-black text-center uppercase tracking-widest placeholder-yellow-600/50 focus:outline-none focus:bg-yellow-50 focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:-translate-y-0.5 transition-all" placeholder="ABCD12">
             </div>
             
             <div *ngIf="errorMessage" class="bg-red-100 border-2 border-red-500 text-red-700 px-4 py-3 rounded-xl font-bold text-center animate-pulse">
@@ -126,8 +153,9 @@ import { Subscription } from 'rxjs';
                      'bg-slate-100': !p.hasGuessed && p.id !== roomState.currentDrawer
                    }">
                 <div class="flex items-center gap-2">
+                  <span class="text-3xl">{{ p.avatar }}</span>
                   <span class="font-black">{{ p.username }}</span>
-                  <span *ngIf="p.id === roomState.currentDrawer" class="text-xs bg-white text-black px-2 py-0.5 rounded-full border-2 border-black font-bold">DRAW</span>
+                  <span *ngIf="p.id === roomState.currentDrawer" class="text-xs bg-white text-black px-2 py-1 rounded-full border-2 border-black font-bold">DRAW</span>
                 </div>
                 <span class="font-black font-mono text-xl">{{ p.score }}</span>
               </div>
@@ -213,7 +241,7 @@ import { Subscription } from 'rxjs';
                 </span>
               </ng-container>
               <ng-container *ngIf="!msg.system">
-                <span class="font-black text-black mr-2">{{ msg.username }}:</span>
+                <span class="font-black text-black mr-2">{{ getAvatarForUser(msg.username || '') }} {{ msg.username }}:</span>
                 <span class="text-slate-800 break-words">{{ msg.message }}</span>
               </ng-container>
             </div>
@@ -247,6 +275,8 @@ import { Subscription } from 'rxjs';
 export class AppComponent implements OnInit, OnDestroy {
   public viewMode: 'home' | 'create' | 'join' = 'home';
   public username = '';
+  public avatars = ['🐶', '🐱', '🐼', '🦊', '🐨', '🐸', '🦄', '🤖', '👻', '👽', '🦖', '🐙'];
+  public selectedAvatar = this.avatars[0];
   public roomIdInput = '';
   public errorMessage = '';
 
@@ -321,7 +351,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.username && this.roomIdInput && (this.viewMode === 'create' || this.viewMode === 'join')) {
       const formattedRoomId = this.roomIdInput.trim().toUpperCase();
       this.errorMessage = '';
-      this.socketService.joinRoom(formattedRoomId, this.username, this.viewMode);
+      this.socketService.joinRoom(formattedRoomId, this.username, this.selectedAvatar, this.viewMode);
       // Removed optimistic UI setting of roomState.id so we wait for server confirmation
     }
   }
@@ -408,6 +438,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   sortedPlayers() {
     return [...this.roomState.players].sort((a, b) => b.score - a.score);
+  }
+
+  getAvatarForUser(username: string): string {
+    const player = this.roomState.players.find(p => p.username === username);
+    return player ? player.avatar : '👤';
   }
 
   scrollToBottom() {

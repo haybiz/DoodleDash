@@ -5,6 +5,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 export interface Player {
   id: string;
   username: string;
+  avatar: string;
   score: number;
   hasGuessed: boolean;
 }
@@ -46,8 +47,8 @@ export class SocketService {
     });
   }
 
-  joinRoom(roomId: string, username: string, action: 'create' | 'join') {
-    this.socket.emit('join_room', { roomId, username, action });
+  joinRoom(roomId: string, username: string, avatar: string, action: 'create' | 'join') {
+    this.socket.emit('join_room', { roomId, username, avatar, action });
   }
 
   onRoomError(): Observable<{ message: string }> {

@@ -24,7 +24,7 @@ const rooms = {};
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  socket.on('join_room', ({ roomId, username, action }) => {
+  socket.on('join_room', ({ roomId, username, avatar, action }) => {
     // If they are trying to join but it doesn't exist, reject them
     if (action === 'join' && !rooms[roomId]) {
       socket.emit('room_error', { message: `Room ${roomId} does not exist.` });
@@ -51,6 +51,7 @@ io.on('connection', (socket) => {
     const player = {
       id: socket.id,
       username,
+      avatar: avatar || '🤖', // default fallback just in case
       score: 0,
       hasGuessed: false
     };

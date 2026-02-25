@@ -175,7 +175,7 @@ import { Subscription } from 'rxjs';
 
           <!-- Canvas Component -->
           <div class="flex-grow relative h-full min-h-[400px]">
-            <app-canvas class="absolute inset-0" [roomId]="roomState.id" [isDrawer]="isDrawer()"></app-canvas>
+            <app-canvas class="absolute inset-0" [roomId]="roomState.id" [isDrawer]="isDrawer()" [isWaiting]="roomState.status === 'waiting'"></app-canvas>
             
             <!-- Overlay for non-drawers while waiting -->
             <div *ngIf="roomState.status !== 'playing' || (!isDrawer() && !hasIGuessed())" class="pointer-events-none absolute inset-0 rounded-xl flex items-end justify-center pb-8 z-20">

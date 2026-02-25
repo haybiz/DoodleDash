@@ -16,6 +16,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   @Input() roomId: string = '';
   @Input() isDrawer: boolean = false;
+  @Input() isWaiting: boolean = false;
+
+  get canDraw(): boolean {
+    return this.isDrawer || this.isWaiting;
+  }
 
   private isDrawing = false;
   private subs: Subscription[] = [];
@@ -97,30 +102,30 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   setColor(color: string) {
-    if (!this.isDrawer) return;
+    if (!this.canDraw) return;
     this.drawingService.currentColor = color;
   }
 
   setLayer(layer: 'foreground' | 'background') {
-    if (!this.isDrawer) return;
+    if (!this.canDraw) return;
     this.activeLayer = layer;
     this.drawingService.setActiveLayer(layer);
   }
 
   setTool(tool: ToolType) {
-    if (!this.isDrawer) return;
+    if (!this.canDraw) return;
     this.drawingService.currentTool = tool;
   }
 
   onMouseDown(event: MouseEvent) {
-    if (!this.isDrawer) return;
+    if (!this.canDraw) return;
     this.isDrawing = true;
     const { x, y } = this.getCoordinates(event);
     this.drawingService.startStroke(x, y);
   }
 
   onMouseMove(event: MouseEvent) {
-    if (!this.isDrawing || !this.isDrawer) return;
+    if (!this.isDrawing || !this.canDraw) return;
     const { x, y } = this.getCoordinates(event);
     this.drawingService.continueStroke(x, y);
 
@@ -133,7 +138,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onTouchStart(event: TouchEvent) {
-    if (!this.isDrawer) return;
+    if (!this.canDraw) return;
     event.preventDefault(); // Prevent scrolling
     this.isDrawing = true;
     const { x, y } = this.getCoordinates(event);
@@ -141,7 +146,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onTouchMove(event: TouchEvent) {
-    if (!this.isDrawer) return;
+    if (!this.canDraw) return;
     event.preventDefault(); // Prevent scrolling
     if (!this.isDrawing) return;
     const { x, y } = this.getCoordinates(event);
@@ -156,7 +161,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseUp() {
-    if (!this.isDrawing || !this.isDrawer) return;
+    if (!this.isDrawing || !this.canDraw) return;
     this.isDrawing = false;
 
     // When finishing a shape, we draw it permanently
@@ -175,13 +180,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   clearCanvas() {
-    if (!this.isDrawer) return;
+    if (!this.canDraw) return;
     this.drawingService.clearCanvas();
     this.socketService.clearCanvas(this.roomId);
   }
 
   undo() {
-    if (!this.isDrawer) return;
+    if (!this.canDraw) return;
     this.drawingService.undo();
     this.socketService.undoAction(this.roomId, { action: 'undo' });
   }

@@ -73,21 +73,21 @@ io.on('connection', (socket) => {
   // Handle incoming drawing batches
   socket.on('draw_batch', (data) => {
     const room = rooms[data.roomId];
-    if (room && room.currentDrawer === socket.id && room.status === 'playing') {
+    if (room && ((room.status === 'playing' && room.currentDrawer === socket.id) || room.status === 'waiting')) {
       socket.to(data.roomId).emit('draw_batch', data.paths);
     }
   });
 
   socket.on('clear_canvas', (roomId) => {
     const room = rooms[roomId];
-    if (room && room.currentDrawer === socket.id) {
+    if (room && ((room.status === 'playing' && room.currentDrawer === socket.id) || room.status === 'waiting')) {
       socket.to(roomId).emit('clear_canvas');
     }
   });
 
   socket.on('undo_action', (data) => {
     const room = rooms[data.roomId];
-    if (room && room.currentDrawer === socket.id) {
+    if (room && ((room.status === 'playing' && room.currentDrawer === socket.id) || room.status === 'waiting')) {
       socket.to(data.roomId).emit('undo_action', data);
     }
   });

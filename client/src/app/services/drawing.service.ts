@@ -56,11 +56,12 @@ export class DrawingService {
     };
 
     if (this.currentTool === 'brush' || this.currentTool === 'highlighter' || this.currentTool === 'spray') {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, y);
-      this.ctx.strokeStyle = this.currentColor;
-      this.ctx.fillStyle = this.currentColor;
-      this.ctx.lineWidth = this.currentWidth;
+      const activeCtx = this.getContextForLayer(this.currentLayer);
+      activeCtx.beginPath();
+      activeCtx.moveTo(x, y);
+      activeCtx.strokeStyle = this.currentColor;
+      activeCtx.fillStyle = this.currentColor;
+      activeCtx.lineWidth = this.currentWidth;
     }
   }
 

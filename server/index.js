@@ -15,8 +15,8 @@ const io = new Server(server, {
   }
 });
 
-// Basic vocabulary for testing
-const wordList = ['apple', 'computer', 'house', 'dog', 'airplane', 'guitar', 'ocean', 'mountain', 'car', 'tree'];
+// Import static categorization dictionary
+const wordsDB = require('./words.json');
 
 // Store room state
 const rooms = {};
@@ -84,6 +84,7 @@ io.on('connection', (socket) => {
     room.currentRound = 1;
     room.totalRounds = totalRounds || 3;
     room.gameMode = gameMode || 'classic';
+    room.wordDifficulty = wordDifficulty || 'medium';
     room.relayActiveWord = false;
     room.knownWordPlayers = [];
     if (room.gameMode === 'relay') {
@@ -262,9 +263,13 @@ function startNextTurn(roomId) {
 
   // Handle Relay vs Classic logic
   let wordToSend = '';
+
+  // Choose word list based on room difficulty
+  const activeWordList = wordsDB[room.wordDifficulty] || wordsDB['medium'];
+
   if (room.gameMode === 'relay') {
     if (!room.relayActiveWord) {
-      room.currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+      room.currentWord = activeWordList[Math.floor(Math.random() * activeWordList.length)];
       room.relayActiveWord = true;
       io.in(roomId).emit('clear_canvas');
     }
@@ -284,7 +289,7 @@ function startNextTurn(roomId) {
     }
   } else {
     // Classic Mode
-    room.currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+    room.currentWord = activeWordList[Math.floor(Math.random() * activeWordList.length)];
     room.roundTime = 60000;
     wordToSend = room.currentWord;
     room.knownWordPlayers = [room.currentDrawer];

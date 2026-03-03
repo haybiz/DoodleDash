@@ -1,0 +1,36 @@
+{
+  "easy": [
+    "apple", "computer", "house", "dog", "cat", "sun", "moon", "star", "tree", "car",
+    "bird", "fish", "ball", "book", "cup", "hat", "shoe", "socks", "pants", "shirt",
+    "flower", "cloud", "rain", "snow", "smile", "sad", "happy", "angry", "door", "window",
+    "table", "chair", "bed", "pencil", "pen", "paper", "phone", "tv", "pizza", "burger",
+    "cookie", "cake", "milk", "water", "juice", "boat", "train", "plane", "bus", "bike",
+    "grass", "leaf", "rock", "dirt", "sand", "ocean", "river", "lake", "fire", "ice",
+    "key", "lock", "watch", "clock", "ring", "box", "bag", "hand", "foot", "eye",
+    "ear", "nose", "mouth", "hair", "face", "boy", "girl", "man", "woman", "baby",
+    "doctor", "nurse", "teacher", "police", "fireman", "king", "queen", "castle", "crown", "sword",
+    "shield", "ghost", "monster", "alien", "robot", "dinosaur", "dragon", "unicorn", "fairy", "mermaid"
+  ],
+  "medium": [
+    "airplane", "guitar", "mountain", "ocean", "bridge", "camera", "diamond", "electricity", "forest", "galaxy",
+    "hospital", "island", "jungle", "kangaroo", "laptop", "magnet", "notebook", "ostrich", "penguin", "quartz",
+    "rocket", "satellite", "telescope", "umbrella", "volcano", "waterfall", "xylophone", "yacht", "zebra", "astronaut",
+    "lighthouse", "submarine", "helicopter", "motorcycle", "skyscraper", "pyramid", "sphinx", "Eiffel Tower", "Statue of Liberty", "Taj Mahal",
+    "microscope", "stethoscope", "thermometer", "compass", "binoculars", "calculator", "keyboard", "mouse", "monitor", "printer",
+    "toaster", "blender", "microwave", "refrigerator", "oven", "vacuum", "washing machine", "dryer", "toothbrush", "toothpaste",
+    "shampoo", "soap", "towel", "comb", "brush", "mirror", "scissors", "glue", "tape", "ruler",
+    "eraser", "marker", "crayon", "paint", "canvas", "paintbrush", "palette", "easel", "sculpture", "museum",
+    "library", "bank", "post office", "supermarket", "bakery", "restaurant", "cafe", "cinema", "theater", "stadium"
+  ],
+  "hard": [
+    "photosynthesis", "metamorphosis", "democracy", "philosophy", "psychology", "architecture", "bureaucracy", "choreography", "cinematography", "cryptocurrency",
+    "ecosystem", "entrepreneur", "globalization", "infrastructure", "kaleidoscope", "luminescence", "machiavellian", "nanotechnology", "onomatopoeia", "paleontology",
+    "quarantine", "renaissance", "serendipity", "thermodynamics", "ubiquitous", "ventriloquist", "whippersnapper", "xenophobia", "yggdrasil", "zeitgeist",
+    "existentialism", "surrealism", "impressionism", "cubism", "abstract", "perspective", "proportion", "symmetry", "asymmetry", "juxtaposition",
+    "irony", "sarcasm", "satire", "parody", "metaphor", "simile", "personification", "hyperbole", "alliteration", "assonance",
+    "quantum mechanics", "relativity", "gravity", "electromagnetism", "nuclear physics", "astrophysics", "cosmology", "string theory", "black hole", "wormhole",
+    "DNA", "RNA", "chromosome", "gene", "mutation", "evolution", "natural selection", "adaptation", "species", "extinction",
+    "algorithm", "data structure", "compiler", "operating system", "network", "database", "artificial intelligence", "machine learning", "neural network", "deep learning",
+    "economy", "inflation", "deflation", "recession", "depression", "supply", "demand", "market", "currency", "investment"
+  ]
+}

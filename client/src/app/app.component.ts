@@ -168,8 +168,15 @@ import { Subscription } from 'rxjs';
                 <button (click)="selectedMode = 'relay'" class="flex-1 py-3 md:py-2 rounded-xl border-4 border-black font-black text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1" [ngClass]="selectedMode === 'relay' ? 'bg-purple-400 text-white translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">🏃 Relay</button>
               </div>
 
-              <label class="text-xs font-black text-slate-500 uppercase tracking-wider text-center">Total Rounds</label>
-              <div class="flex items-center justify-center gap-4">
+              <label class="text-xs font-black text-slate-500 uppercase tracking-wider text-center mt-2">Word Difficulty</label>
+              <div class="flex gap-2 mb-2">
+                <button (click)="selectedDifficulty = 'easy'" class="flex-1 py-3 md:py-2 rounded-xl border-4 border-black font-black text-xs md:text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white" [ngClass]="selectedDifficulty === 'easy' ? 'bg-green-500 translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-slate-300 text-black hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">Easy</button>
+                <button (click)="selectedDifficulty = 'medium'" class="flex-1 py-3 md:py-2 rounded-xl border-4 border-black font-black text-xs md:text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white" [ngClass]="selectedDifficulty === 'medium' ? 'bg-orange-500 translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-slate-300 text-black hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">Medium</button>
+                <button (click)="selectedDifficulty = 'hard'" class="flex-1 py-3 md:py-2 rounded-xl border-4 border-black font-black text-xs md:text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white" [ngClass]="selectedDifficulty === 'hard' ? 'bg-red-500 translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-slate-300 text-black hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">Hard</button>
+              </div>
+
+              <label class="text-xs font-black text-slate-500 uppercase tracking-wider text-center mt-2">Total Rounds</label>
+              <div class="flex items-center justify-center gap-4 mb-2">
                 <button (click)="selectedRounds = selectedRounds > 1 ? selectedRounds - 1 : 1" class="w-10 h-10 rounded-full bg-slate-200 border-4 border-black font-black text-black text-xl flex items-center justify-center hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all focus:outline-none">-</button>
                 <span class="font-black text-3xl text-black w-8 text-center leading-none">{{ selectedRounds }}</span>
                 <button (click)="selectedRounds = selectedRounds < 10 ? selectedRounds + 1 : 10" class="w-10 h-10 rounded-full bg-slate-200 border-4 border-black font-black text-black text-xl flex items-center justify-center hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all focus:outline-none">+</button>
@@ -362,9 +369,10 @@ export class AppComponent implements OnInit, OnDestroy {
   public errorMessage = '';
   public selectedRounds = 3;
   public selectedMode: 'classic' | 'relay' = 'classic';
+  public selectedDifficulty: 'easy' | 'medium' | 'hard' = 'medium';
 
   public myId = '';
-  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0, gameMode: 'classic', doodles: [] };
+  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0, gameMode: 'classic', wordDifficulty: 'medium', doodles: [] };
 
   public drawerWord = '';
   public chatHistory: ChatMessage[] = [];
@@ -485,7 +493,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   startGame() {
     if (this.roomState.id) {
-      this.socketService.startGame(this.roomState.id, this.selectedRounds, this.selectedMode);
+      this.socketService.startGame(this.roomState.id, this.selectedRounds, this.selectedMode, this.selectedDifficulty);
     }
   }
 

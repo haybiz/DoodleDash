@@ -164,9 +164,10 @@ import { GetUsernamePipe } from './pipes/get-username.pipe';
             
             <div *ngIf="roomState.status === 'waiting' && myId === roomState.players[0]?.id" class="flex flex-col gap-2 mt-4 shrink-0">
               <label class="text-xs font-black text-slate-500 uppercase tracking-wider text-center">Game Mode</label>
-              <div class="flex gap-2 mb-2">
-                <button (click)="selectedMode = 'classic'" class="flex-1 py-3 md:py-2 rounded-xl border-4 border-black font-black text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" [ngClass]="selectedMode === 'classic' ? 'bg-yellow-300 translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-white hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">Classic</button>
-                <button (click)="selectedMode = 'relay'" class="flex-1 py-3 md:py-2 rounded-xl border-4 border-black font-black text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1" [ngClass]="selectedMode === 'relay' ? 'bg-purple-400 text-white translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">🏃 Relay</button>
+              <div class="flex gap-2 mb-2 flex-wrap">
+                <button (click)="selectedMode = 'classic'" class="flex-1 min-w-[30%] py-3 md:py-2 rounded-xl border-4 border-black font-black text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" [ngClass]="selectedMode === 'classic' ? 'bg-yellow-300 translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-white hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">Classic</button>
+                <button (click)="selectedMode = 'relay'" class="flex-1 min-w-[30%] py-3 md:py-2 rounded-xl border-4 border-black font-black text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1" [ngClass]="selectedMode === 'relay' ? 'bg-purple-400 text-white translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">🏃 Relay</button>
+                <button (click)="selectedMode = 'showdown'" class="flex-1 min-w-[30%] py-3 md:py-2 rounded-xl border-4 border-black font-black text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1" [ngClass]="selectedMode === 'showdown' ? 'bg-pink-400 text-white translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">⚔️ Showdown</button>
               </div>
 
               <label class="text-xs font-black text-slate-500 uppercase tracking-wider text-center mt-2">Word Difficulty</label>
@@ -408,7 +409,7 @@ export class AppComponent implements OnInit, OnDestroy {
   public roomIdInput = '';
   public errorMessage = '';
   public selectedRounds = 3;
-  public selectedMode: 'classic' | 'relay' = 'classic';
+  public selectedMode: 'classic' | 'relay' | 'showdown' = 'classic';
   public selectedDifficulty: 'easy' | 'medium' | 'hard' = 'medium';
 
   public myId = '';

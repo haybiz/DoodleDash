@@ -22,6 +22,7 @@ export interface RoomState {
   roundTime: number;
   currentRound: number;
   totalRounds: number;
+  gameMode: 'classic' | 'relay' | 'showdown' | 'blitz';
   doodles: { image: string, word: string, drawer: string }[];
 }
 
@@ -62,8 +63,8 @@ export class SocketService {
     });
   }
 
-  startGame(roomId: string, totalRounds: number) {
-    this.socket.emit('start_game', { roomId, totalRounds });
+  startGame(roomId: string, totalRounds: number, gameMode: string = 'classic') {
+    this.socket.emit('start_game', { roomId, totalRounds, gameMode });
   }
 
   // ==== Drawing Events ====

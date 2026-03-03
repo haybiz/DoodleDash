@@ -46,8 +46,10 @@ io.on('connection', (socket) => {
         currentRoundId: 0, // Track specific round instances for timeouts
         currentRound: 0,
         totalRounds: 3,
+        gameMode: 'classic',
         drawerQueue: [],
-        doodles: []
+        doodles: [],
+        relayActiveWord: false
       };
     }
 
@@ -68,7 +70,7 @@ io.on('connection', (socket) => {
     io.in(roomId).emit('chat_message', { system: true, message: `${username} joined the room.` });
   });
 
-  socket.on('start_game', ({ roomId, totalRounds }) => {
+  socket.on('start_game', ({ roomId, totalRounds, gameMode }) => {
     const room = rooms[roomId];
     if (!room || room.players.length < 2) return;
 
@@ -80,6 +82,8 @@ io.on('connection', (socket) => {
     });
     room.currentRound = 1;
     room.totalRounds = totalRounds || 3;
+    room.gameMode = gameMode || 'classic';
+    room.relayActiveWord = false;
     room.drawerQueue = [...room.players.map(p => p.id)]; // Everyone gets a turn this round
     room.doodles = [];
 
@@ -202,6 +206,8 @@ function startNextTurn(roomId) {
   // Check if we need to start a new round
   if (room.drawerQueue.length === 0) {
     room.currentRound++;
+    room.relayActiveWord = false;
+
     if (room.currentRound > room.totalRounds) {
       // Game Over!
       room.status = 'game_over';
@@ -222,8 +228,12 @@ function startNextTurn(roomId) {
     room.drawerQueue = [...room.players.map(p => p.id)];
   }
 
+  // Reset guesses ONLY if it's a new word (Classic mode always, Relay mode only at round start)
+  if (room.gameMode !== 'relay' || !room.relayActiveWord) {
+    room.players.forEach(p => p.hasGuessed = false);
+  }
+
   room.status = 'playing';
-  room.players.forEach(p => p.hasGuessed = false);
 
   // Pop next drawer
   room.currentDrawer = room.drawerQueue.shift();
@@ -234,17 +244,39 @@ function startNextTurn(roomId) {
     return;
   }
 
-  room.currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+  // Handle Relay vs Classic logic
+  let wordToSend = '';
+  if (room.gameMode === 'relay') {
+    if (!room.relayActiveWord) {
+      room.currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+      room.relayActiveWord = true;
+      io.in(roomId).emit('clear_canvas');
+    }
+    room.roundTime = 20000; // 20s per relay sub-turn
+
+    // Determine what word to send to drawer. Only the first drawer gets the word.
+    if (room.drawerQueue.length < room.players.length - 1) {
+      wordToSend = '??? (Just Keep Drawing!)';
+    } else {
+      wordToSend = room.currentWord;
+    }
+  } else {
+    // Classic Mode
+    room.currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+    room.roundTime = 60000;
+    wordToSend = room.currentWord;
+    io.in(roomId).emit('clear_canvas');
+  }
+
   room.roundEndTime = Date.now() + room.roundTime;
   room.currentRoundId += 1; // Increment timeout ID
   const thisRoundId = room.currentRoundId;
 
   io.in(roomId).emit('room_state_update', room);
-  io.in(roomId).emit('clear_canvas');
   io.in(roomId).emit('chat_message', { system: true, message: `Round ${room.currentRound} of ${room.totalRounds}! It brings up ${room.players.find(p => p.id === room.currentDrawer)?.username || 'someone'} to draw.` });
 
   // Inform the drawer of the word
-  io.to(room.currentDrawer).emit('you_are_drawer', { word: room.currentWord });
+  io.to(room.currentDrawer).emit('you_are_drawer', { word: wordToSend });
 
   // Auto-end round timeout
   setTimeout(() => {
@@ -259,14 +291,24 @@ function endTurn(roomId) {
   const room = rooms[roomId];
   if (!room) return;
 
+  const isBatonPass = room.gameMode === 'relay' && room.drawerQueue.length > 0;
+
   room.status = 'round_end';
-  io.in(roomId).emit('chat_message', { system: true, message: `Time's up! The word was: ${room.currentWord}` });
+
+  if (isBatonPass) {
+    io.in(roomId).emit('chat_message', { system: true, message: `Switch! The baton is passing...` });
+  } else {
+    io.in(roomId).emit('chat_message', { system: true, message: `Time's up! The word was: ${room.currentWord}` });
+  }
+
   io.in(roomId).emit('room_state_update', room);
 
-  // Request the drawer to send the final canvas state
-  if (room.currentDrawer) {
+  // Request the drawer to send the final canvas state only at the end of the full round
+  if (!isBatonPass && room.currentDrawer) {
     io.to(room.currentDrawer).emit('request_doodle_save', { word: room.currentWord });
   }
+
+  const delay = isBatonPass ? 2000 : 5000;
 
   // Wait a few seconds, then start next turn
   setTimeout(() => {
@@ -276,7 +318,7 @@ function endTurn(roomId) {
       rooms[roomId].status = 'waiting';
       io.in(roomId).emit('room_state_update', rooms[roomId]);
     }
-  }, 5000);
+  }, delay);
 }
 
 const PORT = process.env.PORT || 3000;

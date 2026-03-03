@@ -161,14 +161,20 @@ import { Subscription } from 'rxjs';
               </div>
             </div>
             
-            <div *ngIf="roomState.status === 'waiting' && myId === roomState.players[0]?.id" class="flex flex-col gap-2 mt-4">
+            <div *ngIf="roomState.status === 'waiting' && myId === roomState.players[0]?.id" class="flex flex-col gap-2 mt-4 shrink-0">
+              <label class="text-xs font-black text-slate-500 uppercase tracking-wider text-center">Game Mode</label>
+              <div class="flex gap-2 mb-2">
+                <button (click)="selectedMode = 'classic'" class="flex-1 py-3 md:py-2 rounded-xl border-4 border-black font-black text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" [ngClass]="selectedMode === 'classic' ? 'bg-yellow-300 translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-white hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">Classic</button>
+                <button (click)="selectedMode = 'relay'" class="flex-1 py-3 md:py-2 rounded-xl border-4 border-black font-black text-sm transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1" [ngClass]="selectedMode === 'relay' ? 'bg-purple-400 text-white translate-y-0.5 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'">🏃 Relay</button>
+              </div>
+
               <label class="text-xs font-black text-slate-500 uppercase tracking-wider text-center">Total Rounds</label>
               <div class="flex items-center justify-center gap-4">
-                <button (click)="selectedRounds = selectedRounds > 1 ? selectedRounds - 1 : 1" class="w-10 h-10 rounded-full bg-slate-200 border-4 border-black font-black text-black text-xl flex items-center justify-center hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all">-</button>
-                <span class="font-black text-3xl text-black w-8 text-center">{{ selectedRounds }}</span>
-                <button (click)="selectedRounds = selectedRounds < 10 ? selectedRounds + 1 : 10" class="w-10 h-10 rounded-full bg-slate-200 border-4 border-black font-black text-black text-xl flex items-center justify-center hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all">+</button>
+                <button (click)="selectedRounds = selectedRounds > 1 ? selectedRounds - 1 : 1" class="w-10 h-10 rounded-full bg-slate-200 border-4 border-black font-black text-black text-xl flex items-center justify-center hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all focus:outline-none">-</button>
+                <span class="font-black text-3xl text-black w-8 text-center leading-none">{{ selectedRounds }}</span>
+                <button (click)="selectedRounds = selectedRounds < 10 ? selectedRounds + 1 : 10" class="w-10 h-10 rounded-full bg-slate-200 border-4 border-black font-black text-black text-xl flex items-center justify-center hover:bg-slate-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all focus:outline-none">+</button>
               </div>
-              <button (click)="startGame()" class="w-full mt-2 bg-green-400 hover:bg-green-300 text-black font-black py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all text-lg">
+              <button (click)="startGame()" class="w-full mt-2 bg-green-400 hover:bg-green-300 text-black font-black py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all text-lg focus:outline-none">
                 Start Game 🚀
               </button>
             </div>
@@ -187,11 +193,14 @@ import { Subscription } from 'rxjs';
               <div *ngIf="roomState.status === 'playing'" class="bg-pink-400 text-black border-4 border-black px-4 py-2 rounded-2xl font-black flex items-center min-w-[80px] justify-center text-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transform -rotate-2">
                 <span class="mr-2">⏱️</span> {{ timeLeft }}s
               </div>
-              <div *ngIf="roomState.status !== 'waiting' && roomState.currentRound" class="bg-indigo-300 text-black border-4 border-black px-4 py-2 rounded-2xl font-black flex items-center justify-center text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transform rotate-1 whitespace-nowrap">
-                Round {{ roomState.currentRound }} / {{ roomState.totalRounds }}
-              </div>
-              <div *ngIf="roomState.status === 'waiting' || !roomState.currentRound" class="px-4 py-2 font-black text-slate-400">
-                ---
+              <div class="flex items-center gap-2">
+                <div *ngIf="roomState.status === 'playing'" class="bg-white px-3 py-1 rounded-full border-4 border-black font-black text-sm md:text-base shadow-sm shrink-0 whitespace-nowrap">
+                  Round {{ roomState.currentRound }} / {{ roomState.totalRounds }}
+                  <span class="bg-black text-white px-2 py-0.5 rounded-md text-[0.6rem] md:text-xs font-black uppercase tracking-wider ml-1 -translate-y-px inline-block">{{ roomState.gameMode }}</span>
+                </div>
+                <div *ngIf="roomState.status === 'waiting'" class="bg-slate-200 px-3 py-1 rounded-full border-4 border-black font-black text-sm md:text-base shadow-sm text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis">
+                  Waiting for players...
+                </div>
               </div>
             </div>
 
@@ -352,9 +361,10 @@ export class AppComponent implements OnInit, OnDestroy {
   public roomIdInput = '';
   public errorMessage = '';
   public selectedRounds = 3;
+  public selectedMode: 'classic' | 'relay' = 'classic';
 
   public myId = '';
-  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0, doodles: [] };
+  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0, gameMode: 'classic', doodles: [] };
 
   public drawerWord = '';
   public chatHistory: ChatMessage[] = [];
@@ -475,7 +485,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   startGame() {
     if (this.roomState.id) {
-      this.socketService.startGame(this.roomState.id, this.selectedRounds);
+      this.socketService.startGame(this.roomState.id, this.selectedRounds, this.selectedMode);
     }
   }
 

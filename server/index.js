@@ -71,7 +71,7 @@ io.on('connection', (socket) => {
     io.in(roomId).emit('chat_message', { system: true, message: `${username} joined the room.` });
   });
 
-  socket.on('start_game', ({ roomId, totalRounds, gameMode }) => {
+  socket.on('start_game', ({ roomId, totalRounds, gameMode, wordDifficulty }) => {
     const room = rooms[roomId];
     if (!room || room.players.length < 2) return;
 

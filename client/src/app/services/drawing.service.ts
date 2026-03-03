@@ -23,7 +23,7 @@ export class DrawingService {
   private history: Stroke[] = [];
 
   // configurable brush
-  public currentColor = '#f8fafc';
+  public currentColor = '#0f172a';
   public currentWidth = 4;
   public currentTool: ToolType = 'brush';
   public currentLayer: 'foreground' | 'background' = 'foreground';

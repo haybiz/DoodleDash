@@ -49,7 +49,8 @@ io.on('connection', (socket) => {
         gameMode: 'classic',
         drawerQueue: [],
         doodles: [],
-        relayActiveWord: false
+        relayActiveWord: false,
+        knownWordPlayers: []
       };
     }
 
@@ -84,6 +85,7 @@ io.on('connection', (socket) => {
     room.totalRounds = totalRounds || 3;
     room.gameMode = gameMode || 'classic';
     room.relayActiveWord = false;
+    room.knownWordPlayers = [];
     room.drawerQueue = [...room.players.map(p => p.id)]; // Everyone gets a turn this round
     room.doodles = [];
 
@@ -128,8 +130,8 @@ io.on('connection', (socket) => {
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
 
-    // Check if playing and player hasn't guessed yet and is not drawer
-    if (room.status === 'playing' && room.currentDrawer !== socket.id && !player.hasGuessed) {
+    // Check if playing and player hasn't guessed yet and does not already know the word
+    if (room.status === 'playing' && !room.knownWordPlayers.includes(socket.id) && !player.hasGuessed) {
       if (data.message.toLowerCase().trim() === room.currentWord.toLowerCase()) {
         player.hasGuessed = true;
 
@@ -207,6 +209,7 @@ function startNextTurn(roomId) {
   if (room.drawerQueue.length === 0) {
     room.currentRound++;
     room.relayActiveWord = false;
+    room.knownWordPlayers = [];
 
     if (room.currentRound > room.totalRounds) {
       // Game Over!
@@ -259,12 +262,18 @@ function startNextTurn(roomId) {
       wordToSend = '??? (Just Keep Drawing!)';
     } else {
       wordToSend = room.currentWord;
+      room.knownWordPlayers.push(room.currentDrawer);
+    }
+    // Any subsequent drawers also shouldn't be able to guess their own drawing
+    if (!room.knownWordPlayers.includes(room.currentDrawer)) {
+      room.knownWordPlayers.push(room.currentDrawer);
     }
   } else {
     // Classic Mode
     room.currentWord = wordList[Math.floor(Math.random() * wordList.length)];
     room.roundTime = 60000;
     wordToSend = room.currentWord;
+    room.knownWordPlayers = [room.currentDrawer];
     io.in(roomId).emit('clear_canvas');
   }
 

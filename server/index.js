@@ -86,7 +86,12 @@ io.on('connection', (socket) => {
     room.gameMode = gameMode || 'classic';
     room.relayActiveWord = false;
     room.knownWordPlayers = [];
-    room.drawerQueue = [...room.players.map(p => p.id)]; // Everyone gets a turn this round
+    if (room.gameMode === 'relay') {
+      const shuffled = [...room.players].sort(() => 0.5 - Math.random());
+      room.drawerQueue = shuffled.slice(0, 2).map(p => p.id);
+    } else {
+      room.drawerQueue = [...room.players.map(p => p.id)]; // Everyone gets a turn this round
+    }
     room.doodles = [];
 
     startNextTurn(roomId);
@@ -141,11 +146,14 @@ io.on('connection', (socket) => {
         player.score += points;
         player.guessSpeed = (player.guessSpeed || 0) + timeLeft;
 
-        // Drawer gets points too
-        const drawer = room.players.find(p => p.id === room.currentDrawer);
-        if (drawer) {
-          drawer.score += 20;
-          drawer.drawingScore = (drawer.drawingScore || 0) + 20;
+        // Drawer(s) get points too. In Relay, split evenly among all knownWordPlayers (the drawers for this round).
+        const drawersToReward = room.knownWordPlayers.map(id => room.players.find(p => p.id === id)).filter(Boolean);
+        if (drawersToReward.length > 0) {
+          const pointsPerDrawer = Math.ceil(20 / drawersToReward.length);
+          drawersToReward.forEach(d => {
+            d.score += pointsPerDrawer;
+            d.drawingScore = (d.drawingScore || 0) + pointsPerDrawer;
+          });
         }
 
         io.in(data.roomId).emit('chat_message', { system: true, message: `${player.username} guessed the word!` });
@@ -228,7 +236,12 @@ function startNextTurn(roomId) {
       return;
     }
     // Refill the queue
-    room.drawerQueue = [...room.players.map(p => p.id)];
+    if (room.gameMode === 'relay') {
+      const shuffled = [...room.players].sort(() => 0.5 - Math.random());
+      room.drawerQueue = shuffled.slice(0, 2).map(p => p.id);
+    } else {
+      room.drawerQueue = [...room.players.map(p => p.id)];
+    }
   }
 
   // Reset guesses ONLY if it's a new word (Classic mode always, Relay mode only at round start)
@@ -257,12 +270,13 @@ function startNextTurn(roomId) {
     }
     room.roundTime = 20000; // 20s per relay sub-turn
 
-    // Determine what word to send to drawer. Only the first drawer gets the word.
-    if (room.drawerQueue.length < room.players.length - 1) {
-      wordToSend = '??? (Just Keep Drawing!)';
-    } else {
+    // In Relay mode, if there are still players in the queue, this is Drawer 1 (gets the real word).
+    // If the queue is empty, this is the final drawer (gets ???)
+    if (room.drawerQueue.length > 0) {
       wordToSend = room.currentWord;
       room.knownWordPlayers.push(room.currentDrawer);
+    } else {
+      wordToSend = '??? (Just Keep Drawing!)';
     }
     // Any subsequent drawers also shouldn't be able to guess their own drawing
     if (!room.knownWordPlayers.includes(room.currentDrawer)) {

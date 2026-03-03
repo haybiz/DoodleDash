@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
         players: [],
         status: 'waiting', // waiting, playing, round_end
         currentWord: '',
-        currentDrawer: null,
+        currentDrawers: [],
         roundEndTime: 0,
         roundTime: 60 * 1000, // 60 seconds
         currentRoundId: 0, // Track specific round instances for timeouts
@@ -50,7 +50,8 @@ io.on('connection', (socket) => {
         drawerQueue: [],
         doodles: [],
         relayActiveWord: false,
-        knownWordPlayers: []
+        knownWordPlayers: [],
+        showdownVotes: {}
       };
     }
 
@@ -101,21 +102,36 @@ io.on('connection', (socket) => {
   // Handle incoming drawing batches
   socket.on('draw_batch', (data) => {
     const room = rooms[data.roomId];
-    if (room && ((room.status === 'playing' && room.currentDrawer === socket.id) || room.status === 'waiting')) {
-      socket.to(data.roomId).emit('draw_batch', data.paths);
+    if (room && ((room.status === 'playing' && room.currentDrawers.includes(socket.id)) || room.status === 'waiting')) {
+      // Determine side for showdown
+      let side = 'left';
+      if (room.gameMode === 'showdown' && room.currentDrawers[1] === socket.id) {
+        side = 'right';
+      }
+      data.side = side; // Inject the side before broadcasting
+      socket.to(data.roomId).emit('draw_batch', data);
     }
   });
 
   socket.on('clear_canvas', (roomId) => {
     const room = rooms[roomId];
-    if (room && ((room.status === 'playing' && room.currentDrawer === socket.id) || room.status === 'waiting')) {
-      socket.to(roomId).emit('clear_canvas');
+    if (room && ((room.status === 'playing' && room.currentDrawers.includes(socket.id)) || room.status === 'waiting')) {
+      let side = 'left';
+      if (room.gameMode === 'showdown' && room.currentDrawers[1] === socket.id) {
+        side = 'right';
+      }
+      socket.to(roomId).emit('clear_canvas', { side });
     }
   });
 
   socket.on('undo_action', (data) => {
     const room = rooms[data.roomId];
-    if (room && ((room.status === 'playing' && room.currentDrawer === socket.id) || room.status === 'waiting')) {
+    if (room && ((room.status === 'playing' && room.currentDrawers.includes(socket.id)) || room.status === 'waiting')) {
+      let side = 'left';
+      if (room.gameMode === 'showdown' && room.currentDrawers[1] === socket.id) {
+        side = 'right';
+      }
+      data.side = side;
       socket.to(data.roomId).emit('undo_action', data);
     }
   });
@@ -147,21 +163,25 @@ io.on('connection', (socket) => {
         player.score += points;
         player.guessSpeed = (player.guessSpeed || 0) + timeLeft;
 
-        // Drawer(s) get points too. In Relay, split evenly among all knownWordPlayers (the drawers for this round).
-        const drawersToReward = room.knownWordPlayers.map(id => room.players.find(p => p.id === id)).filter(Boolean);
-        if (drawersToReward.length > 0) {
-          const pointsPerDrawer = Math.ceil(20 / drawersToReward.length);
-          drawersToReward.forEach(d => {
-            d.score += pointsPerDrawer;
-            d.drawingScore = (d.drawingScore || 0) + pointsPerDrawer;
-          });
+        // Drawer(s) get points too. In Relay/Classic, give points automatically
+        if (room.gameMode !== 'showdown') {
+          const drawersToReward = room.knownWordPlayers.map(id => room.players.find(p => p.id === id)).filter(Boolean);
+          if (drawersToReward.length > 0) {
+            const pointsPerDrawer = Math.ceil(20 / drawersToReward.length);
+            drawersToReward.forEach(d => {
+              d.score += pointsPerDrawer;
+              d.drawingScore = (d.drawingScore || 0) + pointsPerDrawer;
+            });
+          }
+        } else {
+          socket.emit('request_showdown_vote', { drawers: room.currentDrawers });
         }
 
         io.in(data.roomId).emit('chat_message', { system: true, message: `${player.username} guessed the word!` });
         io.in(data.roomId).emit('room_state_update', room);
 
         // Check if everyone guessed
-        const allGuessed = room.players.every(p => p.hasGuessed || p.id === room.currentDrawer);
+        const allGuessed = room.players.every(p => p.hasGuessed || room.currentDrawers.includes(p.id));
         if (allGuessed) {
           endTurn(data.roomId);
         }
@@ -176,9 +196,30 @@ io.on('connection', (socket) => {
   // Save doodle event
   socket.on('save_doodle', ({ roomId, image, word }) => {
     const room = rooms[roomId];
-    if (room && room.currentDrawer === socket.id) {
+    if (room && room.currentDrawers.includes(socket.id)) {
       room.doodles.push({ image, word, drawer: room.players.find(p => p.id === socket.id)?.username || 'Unknown' });
     }
+  });
+
+  // Vote logic for Showdown mode
+  socket.on('vote_drawer', (data) => {
+    const room = rooms[data.roomId];
+    if (!room || room.gameMode !== 'showdown') return;
+
+    if (!room.showdownVotes) room.showdownVotes = {};
+    if (!room.showdownVotes[data.votedFor]) {
+      room.showdownVotes[data.votedFor] = 0;
+    }
+    room.showdownVotes[data.votedFor]++;
+
+    // Award the winning drawer points
+    const winningDrawer = room.players.find(p => p.id === data.votedFor);
+    if (winningDrawer) {
+      winningDrawer.score += 20;
+      winningDrawer.drawingScore = (winningDrawer.drawingScore || 0) + 20;
+    }
+
+    io.in(data.roomId).emit('room_state_update', room);
   });
 
   socket.on('disconnect', () => {
@@ -199,7 +240,7 @@ io.on('connection', (socket) => {
           delete rooms[roomId];
         } else {
           // If drawer left, end round
-          if (room.currentDrawer === socket.id && room.status === 'playing') {
+          if (room.currentDrawers.includes(socket.id) && room.status === 'playing') {
             endTurn(roomId);
           } else {
             io.in(roomId).emit('room_state_update', room);
@@ -230,7 +271,7 @@ function startNextTurn(roomId) {
         if (rooms[roomId]) {
           rooms[roomId].status = 'waiting';
           rooms[roomId].currentWord = '';
-          rooms[roomId].currentDrawer = null;
+          rooms[roomId].currentDrawers = [];
           io.in(roomId).emit('room_state_update', rooms[roomId]);
         }
       }, 15000); // 15 seconds to view summary
@@ -253,10 +294,17 @@ function startNextTurn(roomId) {
   room.status = 'playing';
 
   // Pop next drawer
-  room.currentDrawer = room.drawerQueue.shift();
+  room.currentDrawers = [];
+  if (room.gameMode === 'showdown' && room.drawerQueue.length >= 2) {
+    room.currentDrawers.push(room.drawerQueue.shift());
+    room.currentDrawers.push(room.drawerQueue.shift());
+  } else {
+    const nextD = room.drawerQueue.shift();
+    if (nextD) room.currentDrawers.push(nextD);
+  }
 
   // If the drawer left the game, skip to next turn
-  if (!room.players.find(p => p.id === room.currentDrawer)) {
+  if (!room.players.find(p => p.id === room.currentDrawers[0])) {
     startNextTurn(roomId);
     return;
   }
@@ -279,21 +327,21 @@ function startNextTurn(roomId) {
     // If the queue is empty, this is the final drawer (gets ???)
     if (room.drawerQueue.length > 0) {
       wordToSend = room.currentWord;
-      room.knownWordPlayers.push(room.currentDrawer);
+      room.knownWordPlayers.push(room.currentDrawers[0]);
     } else {
       wordToSend = '??? (Just Keep Drawing!)';
     }
     // Any subsequent drawers also shouldn't be able to guess their own drawing
-    if (!room.knownWordPlayers.includes(room.currentDrawer)) {
-      room.knownWordPlayers.push(room.currentDrawer);
+    if (!room.knownWordPlayers.includes(room.currentDrawers[0])) {
+      room.knownWordPlayers.push(room.currentDrawers[0]);
     }
   } else {
-    // Classic Mode
+    // Classic Mode & Showdown Mode
     room.currentWord = activeWordList[Math.floor(Math.random() * activeWordList.length)];
     room.roundTime = 60000;
     wordToSend = room.currentWord;
-    room.knownWordPlayers = [room.currentDrawer];
-    io.in(roomId).emit('clear_canvas');
+    room.knownWordPlayers = [...room.currentDrawers];
+    io.in(roomId).emit('clear_canvas', { side: 'both' });
   }
 
   room.roundEndTime = Date.now() + room.roundTime;
@@ -301,10 +349,14 @@ function startNextTurn(roomId) {
   const thisRoundId = room.currentRoundId;
 
   io.in(roomId).emit('room_state_update', room);
-  io.in(roomId).emit('chat_message', { system: true, message: `Round ${room.currentRound} of ${room.totalRounds}! It brings up ${room.players.find(p => p.id === room.currentDrawer)?.username || 'someone'} to draw.` });
+  io.in(roomId).emit('chat_message', { system: true, message: `Round ${room.currentRound} of ${room.totalRounds}! Get ready to guess!` });
 
-  // Inform the drawer of the word
-  io.to(room.currentDrawer).emit('you_are_drawer', { word: wordToSend });
+  // Inform the drawer(s) of the word
+  room.currentDrawers.forEach((drawerId, index) => {
+    let side = 'left';
+    if (room.gameMode === 'showdown' && index === 1) side = 'right';
+    io.to(drawerId).emit('you_are_drawer', { word: wordToSend, side });
+  });
 
   // Auto-end round timeout
   setTimeout(() => {
@@ -332,8 +384,10 @@ function endTurn(roomId) {
   io.in(roomId).emit('room_state_update', room);
 
   // Request the drawer to send the final canvas state only at the end of the full round
-  if (!isBatonPass && room.currentDrawer) {
-    io.to(room.currentDrawer).emit('request_doodle_save', { word: room.currentWord });
+  if (!isBatonPass && room.currentDrawers.length > 0) {
+    room.currentDrawers.forEach(id => {
+      io.to(id).emit('request_doodle_save', { word: room.currentWord });
+    });
   }
 
   const delay = isBatonPass ? 2000 : 5000;

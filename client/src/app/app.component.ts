@@ -5,11 +5,12 @@ import { RouterOutlet } from '@angular/router';
 import { CanvasComponent } from './components/canvas/canvas.component';
 import { SocketService, Player, RoomState, ChatMessage } from './services/socket.service';
 import { Subscription } from 'rxjs';
+import { GetUsernamePipe } from './pipes/get-username.pipe';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterOutlet, CanvasComponent],
+  imports: [CommonModule, FormsModule, RouterOutlet, CanvasComponent, GetUsernamePipe],
   template: `
     <main class="w-full h-full min-h-screen p-4 md:p-8 flex flex-col md:flex-row gap-6 bg-slate-900 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800 to-slate-930 text-white relative">
       
@@ -148,16 +149,16 @@ import { Subscription } from 'rxjs';
             <div class="flex flex-col gap-2 overflow-y-auto pr-1 pb-1 flex-grow">
               <div *ngFor="let p of sortedPlayers()" class="flex justify-between items-center p-2 md:p-3 rounded-2xl border-4 border-black text-black transition-all flex-shrink-0"
                    [ngClass]="{
-                     'bg-green-300 translate-x-1': p.hasGuessed,
-                     'bg-cyan-300 -translate-y-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]': p.id === roomState.currentDrawer,
-                     'bg-slate-100': !p.hasGuessed && p.id !== roomState.currentDrawer
-                   }">
-                <div class="flex items-center gap-1.5 min-w-0 flex-1">
-                  <span class="text-2xl flex-shrink-0">{{ p.avatar }}</span>
-                  <span class="font-black text-sm md:text-base truncate block" [title]="p.username">{{ p.username }}</span>
-                  <span *ngIf="p.id === roomState.currentDrawer" class="text-[0.65rem] bg-white text-black px-1.5 py-0.5 rounded-full border-2 border-black font-bold flex-shrink-0 leading-none shadow-sm">DRAW</span>
-                </div>
-                <span class="font-black font-mono text-lg pl-2 flex-shrink-0" [title]="'Score: ' + p.score">{{ p.score }}</span>
+                      'bg-green-300 translate-x-1': p.hasGuessed,
+                      'bg-cyan-300 -translate-y-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]': roomState.currentDrawers.includes(p.id),
+                      'bg-slate-100': !p.hasGuessed && !roomState.currentDrawers.includes(p.id)
+                    }">
+                 <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                   <span class="text-2xl flex-shrink-0">{{ p.avatar }}</span>
+                   <span class="font-black text-sm md:text-base truncate block" [title]="p.username">{{ p.username }}</span>
+                   <span *ngIf="roomState.currentDrawers.includes(p.id)" class="text-[0.65rem] bg-white text-black px-1.5 py-0.5 rounded-full border-2 border-black font-bold flex-shrink-0 leading-none shadow-sm">DRAW</span>
+                 </div>
+                 <span class="font-black font-mono text-lg pl-2 flex-shrink-0" [title]="'Score: ' + p.score">{{ p.score }}</span>
               </div>
             </div>
             
@@ -228,9 +229,48 @@ import { Subscription } from 'rxjs';
           </div>
 
           <!-- Canvas Component & Overlays -->
-          <div class="flex-grow relative h-full min-h-[400px] overflow-hidden rounded-3xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div class="flex-grow relative h-full min-h-[400px] overflow-hidden">
             <ng-container *ngIf="roomState.status !== 'game_over'">
-              <app-canvas class="absolute inset-0" [roomId]="roomState.id" [isDrawer]="isDrawer()" [isWaiting]="roomState.status === 'waiting'"></app-canvas>
+              
+              <!-- Classic / Relay Single Canvas -->
+              <div *ngIf="roomState.gameMode !== 'showdown'" class="absolute inset-0">
+                <app-canvas class="absolute inset-0" [roomId]="roomState.id" [side]="'both'" [isDrawer]="isDrawer('both')" [isWaiting]="roomState.status === 'waiting'"></app-canvas>
+              </div>
+
+              <!-- Showdown Dual Canvas -->
+              <div *ngIf="roomState.gameMode === 'showdown'" class="absolute inset-0 flex flex-col md:flex-row gap-4">
+                 <div class="flex-1 relative">
+                    <div *ngIf="roomState.status === 'playing'" class="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-black text-white px-3 py-1 rounded-full text-xs font-black shadow-md border-2 border-white dropdown-shadow">{{ roomState.players | getUsername:roomState.currentDrawers[0] }}</div>
+                    <app-canvas class="absolute inset-0" [roomId]="roomState.id" [side]="'left'" [isDrawer]="isDrawer('left')" [isWaiting]="roomState.status === 'waiting'"></app-canvas>
+                 </div>
+                 <div class="flex-1 relative">
+                    <div *ngIf="roomState.status === 'playing'" class="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-black text-white px-3 py-1 rounded-full text-xs font-black shadow-md border-2 border-white dropdown-shadow">{{ roomState.players | getUsername:roomState.currentDrawers[1] }}</div>
+                    <app-canvas class="absolute inset-0" [roomId]="roomState.id" [side]="'right'" [isDrawer]="isDrawer('right')" [isWaiting]="roomState.status === 'waiting'"></app-canvas>
+                 </div>
+              </div>
+
+              <!-- Showdown Voting UI -->
+              <div *ngIf="showdownVoteActive" class="absolute inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div class="bg-white p-6 rounded-3xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full text-center transform transition-transform duration-300 animate-bounce">
+                  <h3 class="text-3xl font-black text-black mb-2 uppercase tracking-tight">Vote!</h3>
+                  <p class="text-slate-600 font-bold mb-6">Which drawing helped you guess correctly?</p>
+                  
+                  <div class="flex gap-4">
+                    <button class="flex-1 bg-cyan-300 hover:bg-cyan-200 text-black border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col items-center gap-2"
+                            (click)="submitVote(roomState.currentDrawers[0])">
+                      <span class="text-3xl mb-1">👈</span>
+                      <span class="font-black text-lg">{{ roomState.players | getUsername:roomState.currentDrawers[0] }}</span>
+                      <span class="text-xs font-bold uppercase tracking-widest text-slate-700 bg-white/50 px-2 py-1 rounded-full border-2 border-black">Left Canvas</span>
+                    </button>
+                    <button class="flex-1 bg-pink-300 hover:bg-pink-200 text-black border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col items-center gap-2"
+                            (click)="submitVote(roomState.currentDrawers[1])">
+                      <span class="text-3xl mb-1">👉</span>
+                      <span class="font-black text-lg">{{ roomState.players | getUsername:roomState.currentDrawers[1] }}</span>
+                      <span class="text-xs font-bold uppercase tracking-widest text-slate-700 bg-white/50 px-2 py-1 rounded-full border-2 border-black">Right Canvas</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
               
               <!-- Floating Reactions layer -->
               <div class="absolute inset-0 pointer-events-none z-50 overflow-hidden">
@@ -372,10 +412,12 @@ export class AppComponent implements OnInit, OnDestroy {
   public selectedDifficulty: 'easy' | 'medium' | 'hard' = 'medium';
 
   public myId = '';
-  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawer: '', roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0, gameMode: 'classic', wordDifficulty: 'medium', doodles: [] };
+  public roomState: RoomState = { id: '', players: [], status: 'waiting', currentWord: '', currentDrawers: [], roundEndTime: 0, roundTime: 60000, currentRound: 0, totalRounds: 0, gameMode: 'classic', wordDifficulty: 'medium', doodles: [] };
 
   public drawerWord = '';
   public chatHistory: ChatMessage[] = [];
+  public showdownVoteActive = false;
+  public voteDrawerChoices: string[] = [];
   public currentMessage = '';
   public timeLeft = 0;
 
@@ -430,7 +472,10 @@ export class AppComponent implements OnInit, OnDestroy {
       this.socketService.onYouAreDrawer().subscribe(data => {
         this.drawerWord = data.word;
       }),
-
+      this.socketService.onRequestShowdownVote().subscribe(data => {
+        this.voteDrawerChoices = data.drawers;
+        this.showdownVoteActive = true;
+      }),
       this.socketService.onChat().subscribe(msg => {
         this.chatHistory.push(msg);
         this.scrollToBottom();
@@ -527,8 +572,14 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   // Helpers
-  isDrawer(): boolean {
-    return this.myId === this.roomState.currentDrawer && this.roomState.status === 'playing';
+  isDrawer(side: 'left' | 'right' | 'both' = 'both'): boolean {
+    if (this.roomState.status !== 'playing') return false;
+    if (side === 'both') return this.roomState.currentDrawers.includes(this.myId);
+
+    // For showdown, drawer 0 is left, drawer 1 is right
+    if (side === 'left') return this.roomState.currentDrawers[0] === this.myId;
+    if (side === 'right') return this.roomState.currentDrawers[1] === this.myId;
+    return false;
   }
 
   hasIGuessed(): boolean {
@@ -583,4 +634,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onChatScroll() { }
+
+  submitVote(drawerId: string) {
+    this.socketService.sendShowdownVote(this.roomState.id, drawerId);
+    this.showdownVoteActive = false;
+  }
 }

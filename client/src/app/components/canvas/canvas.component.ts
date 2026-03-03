@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './canvas.component.html',
+  providers: [DrawingService]
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('drawCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -17,6 +18,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() roomId: string = '';
   @Input() isDrawer: boolean = false;
   @Input() isWaiting: boolean = false;
+  @Input() side: 'left' | 'right' | 'both' = 'both';
 
   get canDraw(): boolean {
     return this.isDrawer || this.isWaiting;
@@ -53,15 +55,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // Subscribe to incoming socket events
     this.subs.push(
-      this.socketService.onDrawBatch().subscribe(strokes => {
-        // In local history, emit the stroke
-        this.drawingService.drawStroke(strokes as any as Stroke);
+      this.socketService.onDrawBatch().subscribe(data => {
+        // Only draw if the stroke belongs to our side
+        if (this.side === 'both' || data.side === 'both' || this.side === data.side) {
+          this.drawingService.drawStroke(data as any as Stroke);
+        }
       }),
-      this.socketService.onClearCanvas().subscribe(() => {
-        this.drawingService.clearCanvas(true);
+      this.socketService.onClearCanvas().subscribe((data) => {
+        if (!data || this.side === 'both' || data.side === 'both' || this.side === data.side) {
+          this.drawingService.clearCanvas(true);
+        }
       }),
-      this.socketService.onUndoAction().subscribe(() => {
-        this.drawingService.undo();
+      this.socketService.onUndoAction().subscribe((data) => {
+        if (this.side === 'both' || data.side === 'both' || this.side === data.side) {
+          this.drawingService.undo();
+        }
       }),
       this.socketService.onRequestDoodleSave().subscribe(data => {
         if (this.isDrawer) {

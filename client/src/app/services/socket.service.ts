@@ -17,7 +17,7 @@ export interface RoomState {
   players: Player[];
   status: 'waiting' | 'playing' | 'round_end' | 'game_over';
   currentWord: string; // The word (might be empty/hidden for guessers on frontend depending on backend logic)
-  currentDrawer: string; // socket.id of drawer
+  currentDrawers: string[]; // array of socket.ids
   roundEndTime: number;
   roundTime: number;
   currentRound: number;
@@ -25,6 +25,7 @@ export interface RoomState {
   gameMode: 'classic' | 'relay' | 'showdown' | 'blitz';
   wordDifficulty: 'easy' | 'medium' | 'hard';
   doodles: { image: string, word: string, drawer: string }[];
+  showdownVotes?: { [key: string]: number };
 }
 
 export interface ChatMessage {
@@ -73,9 +74,9 @@ export class SocketService {
     this.socket.emit('draw_batch', { roomId, paths });
   }
 
-  onDrawBatch(): Observable<any[]> {
+  onDrawBatch(): Observable<{ paths: any[], side?: string }> {
     return new Observable(observer => {
-      this.socket.on('draw_batch', (paths: any[]) => observer.next(paths));
+      this.socket.on('draw_batch', (data: any) => observer.next(data));
     });
   }
 
@@ -83,9 +84,9 @@ export class SocketService {
     this.socket.emit('clear_canvas', roomId);
   }
 
-  onClearCanvas(): Observable<void> {
+  onClearCanvas(): Observable<{ side?: string } | void> {
     return new Observable(observer => {
-      this.socket.on('clear_canvas', () => observer.next());
+      this.socket.on('clear_canvas', (data) => observer.next(data));
     });
   }
 
@@ -117,9 +118,9 @@ export class SocketService {
     });
   }
 
-  onYouAreDrawer(): Observable<{ word: string }> {
+  onYouAreDrawer(): Observable<{ word: string, side?: string }> {
     return new Observable(observer => {
-      this.socket.on('you_are_drawer', (data: { word: string }) => observer.next(data));
+      this.socket.on('you_are_drawer', (data: { word: string, side?: string }) => observer.next(data));
     });
   }
 
@@ -143,5 +144,16 @@ export class SocketService {
 
   sendDoodleSave(roomId: string, image: string, word: string) {
     this.socket.emit('save_doodle', { roomId, image, word });
+  }
+
+  // ==== Showdown Voting ====
+  onRequestShowdownVote(): Observable<{ drawers: string[] }> {
+    return new Observable(observer => {
+      this.socket.on('request_showdown_vote', (data) => observer.next(data));
+    });
+  }
+
+  sendShowdownVote(roomId: string, votedForId: string) {
+    this.socket.emit('vote_drawer', { roomId, votedFor: votedForId });
   }
 }
